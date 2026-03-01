@@ -1,0 +1,26 @@
+# Environment files
+.env
+
+# Uploads
+public/uploads/images/*
+!public/uploads/images/.gitkeep
+
+# Database data
+database/data/
+
+# Composer
+/vendor/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# PDFs
+*.pdf
