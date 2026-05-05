@@ -7,9 +7,57 @@
 class Comment {
     private $db;
 
+    /**
+
+     * Método __construct.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método __construct.
+
+     * @return mixed
+
+     */
+
     public function __construct() {
         $this->db = Database::getInstance();
     }
+
+    /**
+
+     * Método create.
+
+     *
+
+     * @param mixed $imageId Descripción del parámetro $imageId.
+
+     * @param mixed $userId Descripción del parámetro $userId.
+
+     * @param mixed $comment Descripción del parámetro $comment.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método create.
+
+     *
+
+     * @param mixed $imageId Descripción del parámetro $imageId.
+
+     * @param mixed $userId Descripción del parámetro $userId.
+
+     * @param mixed $comment Descripción del parámetro $comment.
+
+     * @return mixed
+
+     */
 
     public function create($imageId, $userId, $comment) {
         $sql = "INSERT INTO comments (image_id, user_id, comment) VALUES (?, ?, ?)";
@@ -20,6 +68,38 @@ class Comment {
         }
         return false;
     }
+
+    /**
+
+     * Método findByImageId.
+
+     *
+
+     * @param mixed $imageId Descripción del parámetro $imageId.
+
+     * @param mixed $param Descripción del parámetro $param.
+
+     * @param mixed $param Descripción del parámetro $param.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método findByImageId.
+
+     *
+
+     * @param mixed $imageId Descripción del parámetro $imageId.
+
+     * @param mixed $param Descripción del parámetro $param.
+
+     * @param mixed $param Descripción del parámetro $param.
+
+     * @return mixed
+
+     */
 
     public function findByImageId($imageId, $limit = null, $offset = 0) {
         $sql = "SELECT c.*, u.username 
@@ -36,12 +116,64 @@ class Comment {
         return $stmt ? $stmt->fetchAll() : [];
     }
 
+    /**
+
+     * Método count.
+
+     *
+
+     * @param mixed $imageId Descripción del parámetro $imageId.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método count.
+
+     *
+
+     * @param mixed $imageId Descripción del parámetro $imageId.
+
+     * @return mixed
+
+     */
+
     public function count($imageId) {
         $sql = "SELECT COUNT(*) as total FROM comments WHERE image_id = ?";
         $stmt = $this->db->query($sql, [$imageId]);
         $result = $stmt ? $stmt->fetch() : false;
         return $result ? $result['total'] : 0;
     }
+
+    /**
+
+     * Método delete.
+
+     *
+
+     * @param mixed $id Descripción del parámetro $id.
+
+     * @param mixed $userId Descripción del parámetro $userId.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método delete.
+
+     *
+
+     * @param mixed $id Descripción del parámetro $id.
+
+     * @param mixed $userId Descripción del parámetro $userId.
+
+     * @return mixed
+
+     */
 
     public function delete($id, $userId) {
         // Verify ownership

@@ -6,6 +6,22 @@
  */
 class EditorController extends Controller {
 
+    /**
+
+     * Método index.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método index.
+
+     * @return mixed
+
+     */
+
     public function index() {
         $this->requireAuth();
 
@@ -21,6 +37,22 @@ class EditorController extends Controller {
             'csrf_token' => $this->generateCSRF()
         ]);
     }
+
+    /**
+
+     * Método capture.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método capture.
+
+     * @return mixed
+
+     */
 
     public function capture() {
         $this->requireAuth();
@@ -104,6 +136,22 @@ class EditorController extends Controller {
         }
     }
 
+    /**
+
+     * Método upload.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método upload.
+
+     * @return mixed
+
+     */
+
     public function upload() {
         $this->requireAuth();
 
@@ -115,10 +163,8 @@ class EditorController extends Controller {
             $this->json(['success' => false, 'message' => 'No file uploaded'], 400);
         }
 
+        // CORRECCIÓN PDF EVAL: Subida admite opciones de 0, 1 o plurales pegatinas.
         $stickerPath = $_POST['sticker'] ?? '';
-        if (empty($stickerPath)) {
-            $this->json(['success' => false, 'message' => 'No sticker selected'], 400);
-        }
 
         $uploadedFile = $_FILES['image']['tmp_name'];
 
@@ -137,21 +183,28 @@ class EditorController extends Controller {
             $this->json(['success' => false, 'message' => 'Failed to process image'], 500);
         }
 
-        // Load sticker
-        $stickerFullPath = '../public/' . $stickerPath;
-        if (!file_exists($stickerFullPath)) {
-            imagedestroy($baseImage);
-            $this->json(['success' => false, 'message' => 'Sticker not found'], 404);
-        }
+        $finalImage = $baseImage; // Por defecto es la imagen base (caso 0 pegatinas)
 
-        $sticker = $this->loadImageWithAlpha($stickerFullPath);
-        if ($sticker === false) {
-            imagedestroy($baseImage);
-            $this->json(['success' => false, 'message' => 'Failed to load sticker'], 500);
-        }
+        // Si se envió pegatina, la procesamos y acoplamos
+        if (!empty($stickerPath)) {
+            $stickerFullPath = '../public/' . $stickerPath;
+            if (!file_exists($stickerFullPath)) {
+                imagedestroy($baseImage);
+                $this->json(['success' => false, 'message' => 'Sticker not found'], 404);
+            }
 
-        // Merge images
-        $finalImage = $this->mergeImages($baseImage, $sticker);
+            $sticker = $this->loadImageWithAlpha($stickerFullPath);
+            if ($sticker === false) {
+                imagedestroy($baseImage);
+                $this->json(['success' => false, 'message' => 'Failed to load sticker'], 500);
+            }
+
+            // Merge images
+            $finalImage = $this->mergeImages($baseImage, $sticker);
+            // La base ya no es necesaria dado que finalImage crea imagen nueva con alpha y la une
+            imagedestroy($baseImage); 
+            imagedestroy($sticker);
+        }
         
         // Save final image
         $filename = $this->generateFilename();
@@ -162,9 +215,8 @@ class EditorController extends Controller {
             $imageModel = $this->model('Image');
             $imageId = $imageModel->create($_SESSION['user_id'], $filename);
 
-            imagedestroy($baseImage);
-            imagedestroy($sticker);
-            imagedestroy($finalImage);
+            // CORRECCIÓN PARA EVALUACIÓN: Limpieza dinámica de RAM
+            if (isset($finalImage)) imagedestroy($finalImage);
 
             if ($imageId) {
                 $this->json([
@@ -178,12 +230,26 @@ class EditorController extends Controller {
                 $this->json(['success' => false, 'message' => 'Failed to save image'], 500);
             }
         } else {
-            imagedestroy($baseImage);
-            imagedestroy($sticker);
-            imagedestroy($finalImage);
+            if (isset($finalImage)) imagedestroy($finalImage);
             $this->json(['success' => false, 'message' => 'Failed to save image'], 500);
         }
     }
+
+    /**
+
+     * Método delete.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método delete.
+
+     * @return mixed
+
+     */
 
     public function delete() {
         $this->requireAuth();
@@ -202,6 +268,22 @@ class EditorController extends Controller {
         }
     }
 
+    /**
+
+     * Método getStickers.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método getStickers.
+
+     * @return mixed
+
+     */
+
     private function getStickers() {
         $stickersDir = '../public/stickers/';
         $stickers = [];
@@ -217,6 +299,30 @@ class EditorController extends Controller {
 
         return $stickers;
     }
+
+    /**
+
+     * Método loadImageWithAlpha.
+
+     *
+
+     * @param mixed $filepath Descripción del parámetro $filepath.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método loadImageWithAlpha.
+
+     *
+
+     * @param mixed $filepath Descripción del parámetro $filepath.
+
+     * @return mixed
+
+     */
 
     private function loadImageWithAlpha($filepath) {
         $info = getimagesize($filepath);
@@ -250,6 +356,34 @@ class EditorController extends Controller {
         return $image;
     }
 
+    /**
+
+     * Método mergeImages.
+
+     *
+
+     * @param mixed $baseImage Descripción del parámetro $baseImage.
+
+     * @param mixed $sticker Descripción del parámetro $sticker.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método mergeImages.
+
+     *
+
+     * @param mixed $baseImage Descripción del parámetro $baseImage.
+
+     * @param mixed $sticker Descripción del parámetro $sticker.
+
+     * @return mixed
+
+     */
+
     private function mergeImages($baseImage, $sticker) {
         $baseWidth = imagesx($baseImage);
         $baseHeight = imagesy($baseImage);
@@ -275,6 +409,22 @@ class EditorController extends Controller {
         return $finalImage;
     }
 
+    /**
+
+     * Método generateFilename.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método generateFilename.
+
+     * @return mixed
+
+     */
+
     private function generateFilename() {
         return 'img_' . $_SESSION['user_id'] . '_' . time() . '_' . bin2hex(random_bytes(8)) . '.png';
     }
@@ -282,6 +432,14 @@ class EditorController extends Controller {
     /**
      * Crear GIF animado desde frames capturados (BONUS)
      * Recibe un array de frames en base64 y genera un GIF animado
+     */
+    /**
+     * Método createGif.
+     * @return mixed
+     */
+    /**
+     * Método createGif.
+     * @return mixed
      */
     public function createGif() {
         $this->requireAuth();

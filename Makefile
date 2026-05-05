@@ -1,89 +1,154 @@
-.PHONY: help build up down restart logs clean fclean install setup test
+# ============================================================================
+#  📸 CAMAGRU - MAKEFILE (125% EDITION) 📸
+# ============================================================================
+#  Despliegue Contenerizado de Aplicación MVC Personalizada - Escuela 42
+# ============================================================================
 
-# Colors for output
-BLUE := \033[0;34m
-GREEN := \033[0;32m
-YELLOW := \033[1;33m
-NC := \033[0m # No Color
+.PHONY: help build up down restart logs clean fclean install setup test test-full test-eval shell db status all re
 
-help: ## Show this help message
-	@echo "$(BLUE)Camagru - Available Commands$(NC)"
+# ==================== COLORES ANSI ==========================================
+NEGRITA     := \033[1m
+RESET       := \033[0m
+CIAN        := \033[36m
+VERDE       := \033[32m
+AMARILLO    := \033[33m
+ROJO        := \033[31m
+AZUL        := \033[34m
+MAGENTA     := \033[35m
+
+# ==================== REGLAS PRINCIPALES ====================================
+
+.DEFAULT_GOAL := help
+
+header:
+	@echo "$(CIAN)$(NEGRITA)╔══════════════════════════════════════════════════════════════════════╗$(RESET)"
+	@echo "$(CIAN)$(NEGRITA)║ $(VERDE)📸 CAMAGRU DOCKER SYSTEM - Iniciando Proceso de Despliegue MVC     $(CIAN)║$(RESET)"
+	@echo "$(CIAN)$(NEGRITA)╚══════════════════════════════════════════════════════════════════════╝$(RESET)"
 	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "$(GREEN)%-15s$(NC) %s\n", $$1, $$2}'
 
-setup: ## Run interactive environment setup
-	@echo "$(BLUE)Starting environment setup wizard...$(NC)"
+help: ## Muestra este menu interactivo
+	@echo "$(AZUL)$(NEGRITA)==================================================================================$(RESET)"
+	@echo "$(AZUL)$(NEGRITA)                            🛡️  CAMAGRU - AYUDA DE MAKE 🛡️                    $(RESET)"
+	@echo "$(AZUL)$(NEGRITA)==================================================================================$(RESET)"
+	@echo ""
+	@echo "$(VERDE)Comandos Disponibles:$(RESET)"
+	@echo ""
+	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z_-]+:.*?## / {printf "%s|%s\n", $$1, $$2}' $(MAKEFILE_LIST) \
+		| while IFS='|' read -r cmd desc; do \
+			case "$$cmd" in \
+				help) emoji="📖 "; color="$(AZUL)";; \
+				setup) emoji="🛠️  "; color="$(AMARILLO)";; \
+				build) emoji="🏗️  "; color="$(MAGENTA)";; \
+				up) emoji="🚀 "; color="$(VERDE)";; \
+				down) emoji="⛔ "; color="$(YELLOW)";; \
+				restart) emoji="♻️  "; color="$(CIAN)";; \
+				logs) emoji="📜 "; color="$(AZUL)";; \
+				clean) emoji="🧹 "; color="$(ROJO)";; \
+				fclean) emoji="💣 "; color="$(ROJO)";; \
+				install) emoji="🧩 "; color="$(AMARILLO)";; \
+				test) emoji="🔎 "; color="$(AZUL)";; \
+				test-full) emoji="🧪 "; color="$(AMARILLO)";; \
+				test-eval) emoji="🛡️  "; color="$(AMARILLO)";; \
+				db) emoji="🗄️  "; color="$(MAGENTA)";; \
+				shell) emoji="🐚 "; color="$(MAGENTA)";; \
+				status) emoji="📊 "; color="$(CIAN)";; \
+				all) emoji="⚙️  "; color="$(VERDE)";; \
+				re) emoji="🔁 "; color="$(CIAN)";; \
+				*) emoji=""; color="$(CIAN)";; \
+			esac; \
+			printf "  %bmake %-15s%b - %s\n" "$$color$$emoji" "$$cmd" "$(RESET)" "$$desc"; \
+		done
+	@echo ""
+
+setup: header ## Lanza el Setup Wizard de Variables entorno (.env)
+	@echo "$(AMARILLO)🛠️  [*] Iniciando el asistente de configuración del entorno...$(RESET)"
 	@./env_setup.sh
-	@echo "$(GREEN)Environment configured!$(NC)"
+	@echo "$(VERDE)  ✓ ¡Entorno (.env) configurado con éxito!$(RESET)"
 
-build: ## Build Docker containers
-	@echo "$(BLUE)Building containers...$(NC)"
+build: header ## Construye las imagenes Docker necesarias
+	@echo "$(MAGENTA)🏗️  [+] Construyendo contenedores de Camagru...$(RESET)"
 	docker-compose build
+	@echo "$(VERDE)  ✓ ¡Construcción finalizada!$(RESET)"
 
-up: ## Start the application
-	@echo "$(GREEN)Starting Camagru...$(NC)"
+up: header ## Levanta Camagru en Background
+	@echo "$(AMARILLO)🚀  [*] Levantando orquestación de contenedores en background...$(RESET)"
 	docker-compose up -d
-	@echo "$(GREEN)Application running at http://localhost:8080$(NC)"
-	@echo "$(YELLOW)PHPMyAdmin at http://localhost:8081$(NC)"
+	@echo "$(VERDE)$(NEGRITA)  ✓ ¡Camagru funcionando perfectamente!$(RESET)"
+	@echo "      🌍 App: $(CIAN)http://localhost:8080$(RESET)"
+	@echo "      🗄️  DB Admin: $(MAGENTA)http://localhost:8081$(RESET)\n"
 
-down: ## Stop the application
-	@echo "$(YELLOW)Stopping Camagru...$(NC)"
+down: ## Tumbar los servicios (no rompe Base de datos)
+	@echo "$(ROJO)⛔  [-] Deteniendo Camagru y desvinculando red...$(RESET)"
 	docker-compose down
 
-restart: down up ## Restart the application
+restart: down up ## Reiniciar Docker de la aplicacion
+	@echo "$(CIAN)♻️  Reiniciando la orquestación de Camagru...$(RESET)"
 
-logs: ## Show application logs
+logs: ## Sigue los Logs en vivo del backend Docker (HTTP)
+	@echo "$(AZUL)📜  [*] Siguiendo logs en vivo (Ctrl+C para salir)...$(RESET)"
 	docker-compose logs -f
 
-clean: ## Remove containers and volumes
-	@echo "$(YELLOW)Cleaning up...$(NC)"
+clean: ## Limpieza pura: contenedores huérfanos y caches
+	@echo "$(ROJO)🧹  [-] Purgando contenedores y borrando uploads temp...$(RESET)"
 	docker-compose down -v
 	rm -rf public/uploads/images/*
-	@echo "$(GREEN)Cleanup complete$(NC)"
+	@echo "$(VERDE)  ✓ Limpieza de contenedores completada$(RESET)"
 
-fclean: clean ## Full cleanup including .env file
-	@echo "$(YELLOW)Removing environment configuration...$(NC)"
+fclean: clean ## Limpieza absoluta (Elimina el .env) "Purge mode"
+	@echo "$(ROJO)💣  [-] Exterminando configuración local profunda (.env)...$(RESET)"
 	@if [ -f .env ]; then \
 		rm -f .env; \
-		echo "$(GREEN).env file removed$(NC)"; \
+		echo "$(VERDE)  ✓ Archivo .env desintegrado$(RESET)"; \
 	else \
-		echo "$(YELLOW).env file not found$(NC)"; \
+		echo "$(AMARILLO)  ⚠ Archivo .env no encontrado$(RESET)"; \
 	fi
-	@echo "$(GREEN)Full cleanup complete$(NC)"
+	@echo "$(VERDE)$(NEGRITA)  ✓ ¡Limpieza total absolutizada!$(RESET)"
 
-install: ## Initial setup (configure environment and build)
-	@echo "$(BLUE)Setting up Camagru...$(NC)"
+install: header ## Configura y Buildear absolutamente todo
+	@echo "$(AMARILLO)🧩  [*] Iniciando instalación maestra de Camagru...$(RESET)"
 	@if [ ! -f .env ]; then \
-		echo "$(YELLOW)No .env file found. Running setup wizard...$(NC)"; \
+		echo "$(ROJO)  ⚠ No se encontró archivo .env. Desplegando asistente...$(RESET)"; \
 		./env_setup.sh; \
 	else \
-		echo "$(GREEN).env file already exists$(NC)"; \
+		echo "$(VERDE)  ✓ Archivo .env existente detectado$(RESET)"; \
 	fi
-	@echo "$(BLUE)Building containers...$(NC)"
+	@echo "$(MAGENTA)[+] Construyendo contenedores...$(RESET)"
 	docker-compose build
-	@echo "$(GREEN)Setup complete! Run 'make up' to start the application$(NC)"
+	@echo "$(VERDE)$(NEGRITA)  ✓ ¡Instalación completa! Ejecuta 'make up' para arrancar$(RESET)\n"
 
-test: ## Run basic tests
-	@echo "$(BLUE)Running basic tests...$(NC)"
-	@echo "$(GREEN)✓ Checking Docker...$(NC)"
-	@docker --version
-	@echo "$(GREEN)✓ Checking Docker Compose...$(NC)"
-	@docker-compose --version
-	@echo "$(GREEN)✓ Checking containers...$(NC)"
+all: install up ## Prepara todo e inicia la aplicación (alias "todo en uno")
+	@echo "$(AZUL)⚙️  Ejecutando 'make all' — preparo e inicio completo...$(RESET)"
+
+re: ## Ejecuta `fclean` y luego `all` (limpiar y preparar + arrancar)
+	@echo "$(CIAN)🔁  Ejecutando 're' completo: fclean + all...$(RESET)"
+	@$(MAKE) fclean
+	@$(MAKE) all
+
+# ==================== UTILIDADES BDD (TEST & EVAL) =========================
+
+test: ## Ejecutar la bateria de salud basica Docker
+	@echo "$(AZUL)🔎  Lanzando chequeo básico de entorno Docker...$(RESET)"
+	@echo "$(VERDE)✓ Verificando Engine...$(RESET) $$(docker --version)"
+	@echo "$(VERDE)✓ Verificando Compose...$(RESET) $$(docker-compose --version)"
+	@echo "$(CIAN)Estado actual de contenedores:$(RESET)"
 	@docker-compose ps
 
-test-full: ## Run complete automated test suite
-	@echo "$(BLUE)Running comprehensive test suite...$(NC)"
+test-full: ## Corre las pruebas unitarias automáticas
+	@echo "$(AMARILLO)🧪  Ejecutando batería de pruebas automáticas severas...$(RESET)"
 	@./test_auto.sh
 
-db: ## Access MySQL CLI
-	@echo "$(BLUE)Accessing MySQL...$(NC)"
+test-eval: ## Lanza el Test Virtual Interactico (125% evaluacion guiada)
+	@echo "$(AMARILLO)🛡️  Iniciando evaluación interactiva 42 de Camagru...$(RESET)"
+	@./test_eval.sh
+
+db: ## Interfaz remota en la consola de la BDD (MySQL root)
+	@echo "$(MAGENTA)🗄️  Accediendo a la consola CLI de MySQL...$(RESET)"
 	docker-compose exec db mysql -u root -p
 
-shell: ## Access web container shell
-	@echo "$(BLUE)Accessing container shell...$(NC)"
+shell: ## Lanzar SH proxy shell al servidor Web (Apache)
+	@echo "$(MAGENTA)🐚  Infiltrándose en la bash de Apache...$(RESET)"
 	docker-compose exec web bash
 
-status: ## Show container status
-	@echo "$(BLUE)Container Status:$(NC)"
+status: ## Display info de salud de Docker-Camagru
+	@echo "$(CIAN)📊  Estado de la flota:$(RESET)"
 	@docker-compose ps

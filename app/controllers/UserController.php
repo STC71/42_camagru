@@ -6,6 +6,22 @@
  */
 class UserController extends Controller {
 
+    /**
+
+     * Método profile.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método profile.
+
+     * @return mixed
+
+     */
+
     public function profile() {
         $this->requireAuth();
 
@@ -22,6 +38,22 @@ class UserController extends Controller {
             'image_count' => $imageCount
         ]);
     }
+
+    /**
+
+     * Método settings.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método settings.
+
+     * @return mixed
+
+     */
 
     public function settings() {
         $this->requireAuth();
@@ -51,6 +83,34 @@ class UserController extends Controller {
             'csrf_token' => $this->generateCSRF()
         ]);
     }
+
+    /**
+
+     * Método updateProfile.
+
+     *
+
+     * @param mixed $userModel Descripción del parámetro $userModel.
+
+     * @param mixed $user Descripción del parámetro $user.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método updateProfile.
+
+     *
+
+     * @param mixed $userModel Descripción del parámetro $userModel.
+
+     * @param mixed $user Descripción del parámetro $user.
+
+     * @return mixed
+
+     */
 
     private function updateProfile($userModel, $user) {
         $username = $this->sanitize($_POST['username'] ?? '');
@@ -88,6 +148,34 @@ class UserController extends Controller {
         $this->redirect('settings');
     }
 
+    /**
+
+     * Método changePassword.
+
+     *
+
+     * @param mixed $userModel Descripción del parámetro $userModel.
+
+     * @param mixed $user Descripción del parámetro $user.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método changePassword.
+
+     *
+
+     * @param mixed $userModel Descripción del parámetro $userModel.
+
+     * @param mixed $user Descripción del parámetro $user.
+
+     * @return mixed
+
+     */
+
     private function changePassword($userModel, $user) {
         $currentPassword = $_POST['current_password'] ?? '';
         $newPassword = $_POST['new_password'] ?? '';
@@ -119,6 +207,30 @@ class UserController extends Controller {
 
         $this->redirect('settings');
     }
+
+    /**
+
+     * Método updateNotifications.
+
+     *
+
+     * @param mixed $userModel Descripción del parámetro $userModel.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método updateNotifications.
+
+     *
+
+     * @param mixed $userModel Descripción del parámetro $userModel.
+
+     * @return mixed
+
+     */
 
     private function updateNotifications($userModel) {
         $notifyComments = isset($_POST['notify_comments']) ? 1 : 0;

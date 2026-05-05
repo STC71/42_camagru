@@ -197,10 +197,12 @@ camagru/
 │   └── uploads/
 ├── database/             # Scripts SQL
 │   └── init.sql
-└── docker/               # Configuración Docker
-    ├── docker-compose.yml
-    ├── Dockerfile
-    └── apache.conf
+│
+# CONFIGURACIÓN Y DESPLIEGUE
+├── docker-compose.yml    # Orquestación de contenedores
+├── Dockerfile            # Construcción imagen servidor web
+├── apache.conf           # Configuración del VirtualHost
+└── docker-entrypoint.sh  # Script de inicialización Docker
 ```
 
 ### Flujo de Solicitud
@@ -289,7 +291,6 @@ Ver [QUICKSTART_ES.md](QUICKSTART_ES.md) para instrucciones detalladas.
 ```
 camagru/
 ├── 📄 README.md                    # Este archivo
-├── 📄 README_ES.md                 # Versión en español
 ├── 📄 QUICKSTART.md                # Guía de inicio rápido
 ├── 📄 COMPLIANCE.md                # Checklist del subject
 ├── 📄 SUMMARY.md                   # Resumen técnico
@@ -319,10 +320,11 @@ camagru/
 ├── 📁 database/                    # Scripts de base de datos
 │   └── 📄 init.sql                 # Schema + datos iniciales
 │
-└── 📁 docker/                      # Configuración de Docker
-    ├── docker-compose.yml
-    ├── Dockerfile
-    └── apache.conf
+# CONFIGURACIÓN Y DESPLIEGUE
+├── 📄 docker-compose.yml           # Orquestación de contenedores
+├── 📄 Dockerfile                   # Construcción imagen servidor web
+├── 📄 apache.conf                  # Configuración del VirtualHost
+└── 📄 docker-entrypoint.sh         # Script de inicialización Docker
 ```
 
 **Total:** ~40 archivos | ~8,000 líneas de código

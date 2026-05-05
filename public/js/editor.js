@@ -66,10 +66,34 @@ async function initializeWebcam() {
 /**
  * BONUS 2: Vista previa en vivo con sticker superpuesto
  */
+/**
+ * startLivePreview - Descripción de la función startLivePreview (añadir detalle).
+ * @returns {any} Descripción del valor devuelto.
+ */
+/**
+ * startLivePreview - Descripción de la función startLivePreview (añadir detalle).
+ * @returns {any} Descripción del valor devuelto.
+ */
 function startLivePreview() {
     const ctx = EditorState.previewCanvas.getContext('2d');
     EditorState.previewCanvas.width = EditorState.videoElement.videoWidth;
     EditorState.previewCanvas.height = EditorState.videoElement.videoHeight;
+    
+    /**
+    
+     * drawPreview - Descripción de la función drawPreview (añadir detalle).
+    
+     * @returns {any} Descripción del valor devuelto.
+    
+     */
+    
+    /**
+    
+     * drawPreview - Descripción de la función drawPreview (añadir detalle).
+    
+     * @returns {any} Descripción del valor devuelto.
+    
+     */
     
     function drawPreview() {
         if (!EditorState.videoElement.paused && !EditorState.videoElement.ended) {
@@ -96,6 +120,14 @@ function startLivePreview() {
 
 /**
  * BONUS 2: Drag & Drop para posicionar stickers
+ */
+/**
+ * initializeDragAndDrop - Descripción de la función initializeDragAndDrop (añadir detalle).
+ * @returns {any} Descripción del valor devuelto.
+ */
+/**
+ * initializeDragAndDrop - Descripción de la función initializeDragAndDrop (añadir detalle).
+ * @returns {any} Descripción del valor devuelto.
  */
 function initializeDragAndDrop() {
     const canvas = EditorState.previewCanvas;
@@ -133,6 +165,30 @@ function initializeDragAndDrop() {
     });
 }
 
+/**
+
+ * startDrag - Descripción de la función startDrag (añadir detalle).
+
+ *
+
+ * @param {any} e Descripción de e.
+
+ * @returns {any} Descripción del valor devuelto.
+
+ */
+
+/**
+
+ * startDrag - Descripción de la función startDrag (añadir detalle).
+
+ *
+
+ * @param {any} e Descripción de e.
+
+ * @returns {any} Descripción del valor devuelto.
+
+ */
+
 function startDrag(e) {
     if (!EditorState.selectedSticker) return;
     
@@ -152,6 +208,30 @@ function startDrag(e) {
     }
 }
 
+/**
+
+ * drag - Descripción de la función drag (añadir detalle).
+
+ *
+
+ * @param {any} e Descripción de e.
+
+ * @returns {any} Descripción del valor devuelto.
+
+ */
+
+/**
+
+ * drag - Descripción de la función drag (añadir detalle).
+
+ *
+
+ * @param {any} e Descripción de e.
+
+ * @returns {any} Descripción del valor devuelto.
+
+ */
+
 function drag(e) {
     if (!EditorState.isDragging) return;
     
@@ -164,12 +244,60 @@ function drag(e) {
     EditorState.stickerPosition.y = Math.max(10, Math.min(90, y));
 }
 
+/**
+
+ * stopDrag - Descripción de la función stopDrag (añadir detalle).
+
+ * @returns {any} Descripción del valor devuelto.
+
+ */
+
+/**
+
+ * stopDrag - Descripción de la función stopDrag (añadir detalle).
+
+ * @returns {any} Descripción del valor devuelto.
+
+ */
+
 function stopDrag() {
     EditorState.isDragging = false;
     if (EditorState.previewCanvas) {
         EditorState.previewCanvas.style.cursor = EditorState.selectedSticker ? 'grab' : 'default';
     }
 }
+
+/**
+
+ * drawStickerOnCanvas - Descripción de la función drawStickerOnCanvas (añadir detalle).
+
+ *
+
+ * @param {any} ctx Descripción de ctx.
+
+ * @param {any} width Descripción de width.
+
+ * @param {any} height Descripción de height.
+
+ * @returns {any} Descripción del valor devuelto.
+
+ */
+
+/**
+
+ * drawStickerOnCanvas - Descripción de la función drawStickerOnCanvas (añadir detalle).
+
+ *
+
+ * @param {any} ctx Descripción de ctx.
+
+ * @param {any} width Descripción de width.
+
+ * @param {any} height Descripción de height.
+
+ * @returns {any} Descripción del valor devuelto.
+
+ */
 
 function drawStickerOnCanvas(ctx, width, height) {
     const stickerImg = document.querySelector(`.sticker-item.selected img`);
@@ -183,6 +311,14 @@ function drawStickerOnCanvas(ctx, width, height) {
 
 /**
  * Selección de stickers
+ */
+/**
+ * initializeStickerSelection - Descripción de la función initializeStickerSelection (añadir detalle).
+ * @returns {any} Descripción del valor devuelto.
+ */
+/**
+ * initializeStickerSelection - Descripción de la función initializeStickerSelection (añadir detalle).
+ * @returns {any} Descripción del valor devuelto.
  */
 function initializeStickerSelection() {
     const stickerItems = document.querySelectorAll('.sticker-item');
@@ -224,6 +360,14 @@ function initializeStickerSelection() {
 /**
  * Captura de foto con sticker
  */
+/**
+ * initializeCaptureButton - Descripción de la función initializeCaptureButton (añadir detalle).
+ * @returns {any} Descripción del valor devuelto.
+ */
+/**
+ * initializeCaptureButton - Descripción de la función initializeCaptureButton (añadir detalle).
+ * @returns {any} Descripción del valor devuelto.
+ */
 function initializeCaptureButton() {
     const captureBtn = document.getElementById('capture-btn');
     if (!captureBtn) return;
@@ -255,7 +399,7 @@ function initializeCaptureButton() {
             const result = await response.json();
             
             if (result.success) {
-                showNotification('¡Foto capturada exitosamente!', 'success');
+                showNotification('¡Foto capturada con éxito!', 'success');
                 addImageToGallery(result.filename, result.url);
             } else {
                 showNotification(result.message || 'Error al capturar foto', 'error');
@@ -273,6 +417,14 @@ function initializeCaptureButton() {
 /**
  * Subida de archivo
  */
+/**
+ * initializeUploadButton - Descripción de la función initializeUploadButton (añadir detalle).
+ * @returns {any} Descripción del valor devuelto.
+ */
+/**
+ * initializeUploadButton - Descripción de la función initializeUploadButton (añadir detalle).
+ * @returns {any} Descripción del valor devuelto.
+ */
 function initializeUploadButton() {
     const uploadForm = document.getElementById('upload-form');
     if (!uploadForm) return;
@@ -280,18 +432,23 @@ function initializeUploadButton() {
     uploadForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        if (!EditorState.selectedSticker) {
-            showNotification('Por favor, selecciona un sticker primero', 'error');
-            return;
-        }
+        // CORRECCIÓN PDF EVAL: Permite subir imagen con 0 pegatinas
+        // Se borró el bloqueo estricto de sticker para ficheros subidos del PC
         
-        const fileInput = document.getElementById('file-upload');
+        const fileInput = document.getElementById('file-input'); // Usar ID idéntico a la vista
         if (!fileInput.files.length) {
             showNotification('Por favor, selecciona una imagen', 'error');
             return;
         }
         
         const formData = new FormData(this);
+        
+        // El backend espera $_FILES['image'] y opcionalmente $_POST['sticker']
+        formData.append('image', fileInput.files[0]);
+        if (EditorState.selectedSticker) {
+            formData.append('sticker', EditorState.selectedSticker);
+        }
+        
         const submitBtn = this.querySelector('button[type="submit"]');
         
         submitBtn.disabled = true;
@@ -306,7 +463,7 @@ function initializeUploadButton() {
             const result = await response.json();
             
             if (result.success) {
-                showNotification('¡Imagen subida exitosamente!', 'success');
+                showNotification('¡Imagen subida con éxito!', 'success');
                 addImageToGallery(result.filename, result.url);
                 fileInput.value = '';
             } else {
@@ -325,6 +482,14 @@ function initializeUploadButton() {
 /**
  * BONUS 5: Generación de GIF Animado
  */
+/**
+ * initializeGifControls - Descripción de la función initializeGifControls (añadir detalle).
+ * @returns {any} Descripción del valor devuelto.
+ */
+/**
+ * initializeGifControls - Descripción de la función initializeGifControls (añadir detalle).
+ * @returns {any} Descripción del valor devuelto.
+ */
 function initializeGifControls() {
     const startGifBtn = document.getElementById('start-gif-btn');
     const stopGifBtn = document.getElementById('stop-gif-btn');
@@ -337,6 +502,22 @@ function initializeGifControls() {
         stopGifBtn.addEventListener('click', stopGifRecording);
     }
 }
+
+/**
+
+ * startGifRecording - Descripción de la función startGifRecording (añadir detalle).
+
+ * @returns {any} Descripción del valor devuelto.
+
+ */
+
+/**
+
+ * startGifRecording - Descripción de la función startGifRecording (añadir detalle).
+
+ * @returns {any} Descripción del valor devuelto.
+
+ */
 
 function startGifRecording() {
     if (!EditorState.selectedSticker) {
@@ -432,6 +613,14 @@ async function stopGifRecording() {
 /**
  * Eliminar imágenes
  */
+/**
+ * initializeDeleteButtons - Descripción de la función initializeDeleteButtons (añadir detalle).
+ * @returns {any} Descripción del valor devuelto.
+ */
+/**
+ * initializeDeleteButtons - Descripción de la función initializeDeleteButtons (añadir detalle).
+ * @returns {any} Descripción del valor devuelto.
+ */
 function initializeDeleteButtons() {
     const deleteButtons = document.querySelectorAll('.btn-delete');
     
@@ -475,6 +664,20 @@ function initializeDeleteButtons() {
 /**
  * Agregar imagen a la galería de miniaturas
  */
+/**
+ * addImageToGallery - Descripción de la función addImageToGallery (añadir detalle).
+ *
+ * @param {any} filename Descripción de filename.
+ * @param {any} url Descripción de url.
+ * @returns {any} Descripción del valor devuelto.
+ */
+/**
+ * addImageToGallery - Descripción de la función addImageToGallery (añadir detalle).
+ *
+ * @param {any} filename Descripción de filename.
+ * @param {any} url Descripción de url.
+ * @returns {any} Descripción del valor devuelto.
+ */
 function addImageToGallery(filename, url) {
     const gallery = document.querySelector('.thumbnails-grid');
     if (!gallery) return;
@@ -496,6 +699,20 @@ function addImageToGallery(filename, url) {
 
 /**
  * Función auxiliar para notificaciones
+ */
+/**
+ * showNotification - Descripción de la función showNotification (añadir detalle).
+ *
+ * @param {any} message Descripción de message.
+ * @param {any} type Descripción de type.
+ * @returns {any} Descripción del valor devuelto.
+ */
+/**
+ * showNotification - Descripción de la función showNotification (añadir detalle).
+ *
+ * @param {any} message Descripción de message.
+ * @param {any} type Descripción de type.
+ * @returns {any} Descripción del valor devuelto.
  */
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');

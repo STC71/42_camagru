@@ -24,3 +24,6 @@ Thumbs.db
 
 # PDFs
 *.pdf
+
+# Backups created by scripts/add_docblocks.py and add_jsdoc.py
+*.bak.*

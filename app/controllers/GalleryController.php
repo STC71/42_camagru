@@ -6,6 +6,22 @@
  */
 class GalleryController extends Controller {
 
+    /**
+
+     * Método index.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método index.
+
+     * @return mixed
+
+     */
+
     public function index() {
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
         $perPage = 5;
@@ -44,6 +60,22 @@ class GalleryController extends Controller {
         ]);
     }
 
+    /**
+
+     * Método like.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método like.
+
+     * @return mixed
+
+     */
+
     public function like() {
         $this->requireAuth();
 
@@ -64,6 +96,22 @@ class GalleryController extends Controller {
             'has_liked' => $hasLiked
         ]);
     }
+
+    /**
+
+     * Método comment.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método comment.
+
+     * @return mixed
+
+     */
 
     public function comment() {
         $this->requireAuth();
@@ -122,6 +170,14 @@ class GalleryController extends Controller {
     /**
      * Cargar más imágenes para scroll infinito (BONUS)
      * Endpoint AJAX que devuelve imágenes en formato JSON
+     */
+    /**
+     * Método loadMore.
+     * @return mixed
+     */
+    /**
+     * Método loadMore.
+     * @return mixed
      */
     public function loadMore() {
         // Obtener parámetros de paginación

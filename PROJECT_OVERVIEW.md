@@ -169,10 +169,11 @@ camagru/
 ├── 📁 database/
 │   └── init.sql                # Schema + seed data
 │
-├── 📁 docker/
-│   ├── docker-compose.yml      # Orquestación
-│   ├── Dockerfile              # Imagen PHP custom
-│   └── apache.conf             # Configuración Apache
+# CONFIGURACIÓN Y DESPLIEGUE
+├── 📄 docker-compose.yml       # Orquestación de contenedores
+├── 📄 Dockerfile               # Construcción imagen servidor web
+├── 📄 apache.conf              # Configuración del VirtualHost
+└── 📄 docker-entrypoint.sh     # Script de inicialización Docker
 │
 ├── 📄 .env.example             # Template de config
 ├── 📄 .gitignore               # Archivos ignorados

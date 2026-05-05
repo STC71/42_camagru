@@ -7,9 +7,53 @@
 class Image {
     private $db;
 
+    /**
+
+     * Método __construct.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método __construct.
+
+     * @return mixed
+
+     */
+
     public function __construct() {
         $this->db = Database::getInstance();
     }
+
+    /**
+
+     * Método create.
+
+     *
+
+     * @param mixed $userId Descripción del parámetro $userId.
+
+     * @param mixed $filename Descripción del parámetro $filename.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método create.
+
+     *
+
+     * @param mixed $userId Descripción del parámetro $userId.
+
+     * @param mixed $filename Descripción del parámetro $filename.
+
+     * @return mixed
+
+     */
 
     public function create($userId, $filename) {
         $sql = "INSERT INTO images (user_id, filename) VALUES (?, ?)";
@@ -21,6 +65,30 @@ class Image {
         return false;
     }
 
+    /**
+
+     * Método findById.
+
+     *
+
+     * @param mixed $id Descripción del parámetro $id.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método findById.
+
+     *
+
+     * @param mixed $id Descripción del parámetro $id.
+
+     * @return mixed
+
+     */
+
     public function findById($id) {
         $sql = "SELECT i.*, u.username 
                 FROM images i 
@@ -29,6 +97,38 @@ class Image {
         $stmt = $this->db->query($sql, [$id]);
         return $stmt ? $stmt->fetch() : false;
     }
+
+    /**
+
+     * Método findByUserId.
+
+     *
+
+     * @param mixed $userId Descripción del parámetro $userId.
+
+     * @param mixed $param Descripción del parámetro $param.
+
+     * @param mixed $param Descripción del parámetro $param.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método findByUserId.
+
+     *
+
+     * @param mixed $userId Descripción del parámetro $userId.
+
+     * @param mixed $param Descripción del parámetro $param.
+
+     * @param mixed $param Descripción del parámetro $param.
+
+     * @return mixed
+
+     */
 
     public function findByUserId($userId, $limit = null, $offset = 0) {
         $sql = "SELECT * FROM images WHERE user_id = ? ORDER BY created_at DESC";
@@ -40,6 +140,34 @@ class Image {
         $stmt = $this->db->query($sql, [$userId]);
         return $stmt ? $stmt->fetchAll() : [];
     }
+
+    /**
+
+     * Método getAll.
+
+     *
+
+     * @param mixed $param Descripción del parámetro $param.
+
+     * @param mixed $param Descripción del parámetro $param.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método getAll.
+
+     *
+
+     * @param mixed $param Descripción del parámetro $param.
+
+     * @param mixed $param Descripción del parámetro $param.
+
+     * @return mixed
+
+     */
 
     public function getAll($limit = 5, $offset = 0) {
         $sql = "SELECT i.*, u.username, 
@@ -54,6 +182,22 @@ class Image {
         return $stmt ? $stmt->fetchAll() : [];
     }
 
+    /**
+
+     * Método count.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método count.
+
+     * @return mixed
+
+     */
+
     public function count() {
         $sql = "SELECT COUNT(*) as total FROM images";
         $stmt = $this->db->query($sql);
@@ -61,12 +205,64 @@ class Image {
         return $result ? $result['total'] : 0;
     }
 
+    /**
+
+     * Método countByUser.
+
+     *
+
+     * @param mixed $userId Descripción del parámetro $userId.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método countByUser.
+
+     *
+
+     * @param mixed $userId Descripción del parámetro $userId.
+
+     * @return mixed
+
+     */
+
     public function countByUser($userId) {
         $sql = "SELECT COUNT(*) as total FROM images WHERE user_id = ?";
         $stmt = $this->db->query($sql, [$userId]);
         $result = $stmt ? $stmt->fetch() : false;
         return $result ? $result['total'] : 0;
     }
+
+    /**
+
+     * Método delete.
+
+     *
+
+     * @param mixed $id Descripción del parámetro $id.
+
+     * @param mixed $userId Descripción del parámetro $userId.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método delete.
+
+     *
+
+     * @param mixed $id Descripción del parámetro $id.
+
+     * @param mixed $userId Descripción del parámetro $userId.
+
+     * @return mixed
+
+     */
 
     public function delete($id, $userId) {
         // Verify ownership
@@ -85,6 +281,30 @@ class Image {
         $sql = "DELETE FROM images WHERE id = ? AND user_id = ?";
         return $this->db->query($sql, [$id, $userId]) !== false;
     }
+
+    /**
+
+     * Método getWithDetails.
+
+     *
+
+     * @param mixed $imageId Descripción del parámetro $imageId.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método getWithDetails.
+
+     *
+
+     * @param mixed $imageId Descripción del parámetro $imageId.
+
+     * @return mixed
+
+     */
 
     public function getWithDetails($imageId) {
         $sql = "SELECT i.*, u.username, u.id as user_id,

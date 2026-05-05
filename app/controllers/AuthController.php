@@ -6,6 +6,22 @@
  */
 class AuthController extends Controller {
 
+    /**
+
+     * Método login.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método login.
+
+     * @return mixed
+
+     */
+
     public function login() {
         $this->requireGuest();
 
@@ -45,6 +61,22 @@ class AuthController extends Controller {
             'csrf_token' => $this->generateCSRF()
         ]);
     }
+
+    /**
+
+     * Método register.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método register.
+
+     * @return mixed
+
+     */
 
     public function register() {
         $this->requireGuest();
@@ -120,6 +152,22 @@ class AuthController extends Controller {
         ]);
     }
 
+    /**
+
+     * Método verify.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método verify.
+
+     * @return mixed
+
+     */
+
     public function verify() {
         $token = $_GET['token'] ?? '';
 
@@ -144,6 +192,22 @@ class AuthController extends Controller {
 
         $this->redirect('login');
     }
+
+    /**
+
+     * Método forgotPassword.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método forgotPassword.
+
+     * @return mixed
+
+     */
 
     public function forgotPassword() {
         $this->requireGuest();
@@ -180,6 +244,22 @@ class AuthController extends Controller {
             'csrf_token' => $this->generateCSRF()
         ]);
     }
+
+    /**
+
+     * Método resetPassword.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método resetPassword.
+
+     * @return mixed
+
+     */
 
     public function resetPassword() {
         $token = $_GET['token'] ?? '';
@@ -235,6 +315,22 @@ class AuthController extends Controller {
             'token' => $token
         ]);
     }
+
+    /**
+
+     * Método logout.
+
+     * @return mixed
+
+     */
+
+    /**
+
+     * Método logout.
+
+     * @return mixed
+
+     */
 
     public function logout() {
         session_destroy();
