@@ -46,8 +46,56 @@ class Router {
 
     
      */
+/**
+ * Método `__construct` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `__construct` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->__construct();
+ * ```
+ */
 
+/**
+ * Método `__construct` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `__construct` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->__construct();
+ * ```
+ */
     
+/**
+ * Método `__construct` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `__construct` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->__construct();
+ * ```
+ */
     public function __construct() {
         $this->loadRoutes();
     }
@@ -66,6 +114,22 @@ class Router {
      * Método loadRoutes.
      * @return mixed
      */
+/**
+ * Método `loadRoutes` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `loadRoutes` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->loadRoutes();
+ * ```
+ */
     private function loadRoutes() {
         // Define rutas: 'url' => ['controlador', 'metodo']
         $this->routes = [
@@ -110,6 +174,22 @@ class Router {
          * Despacha la petición actual resolviendo controlador, método y parámetros.
          * @return mixed
          */
+/**
+ * Método `dispatch` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `dispatch` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->dispatch();
+ * ```
+ */
         public function dispatch() {
         $url = $this->parseUrl();
 
@@ -180,6 +260,23 @@ class Router {
          * @param mixed $string Descripción del parámetro $string.
          * @return mixed
          */
+/**
+ * Procesa/transforma la entrada según la lógica del método.
+ *
+ * Descripción detallada:
+ * Este método `toCamelCase` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $string Descripción detallada de $string.
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->toCamelCase($string);
+ * ```
+ */
         private function toCamelCase($string) {
         return lcfirst(str_replace('-', '', ucwords($string, '-')));
     }
@@ -205,6 +302,22 @@ class Router {
          * Parsea la URL proporcionada y devuelve sus partes.
          * @return mixed
          */
+/**
+ * Procesa/transforma la entrada según la lógica del método.
+ *
+ * Descripción detallada:
+ * Este método `parseUrl` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->parseUrl();
+ * ```
+ */
         private function parseUrl() {
         if (isset($_GET['url'])) {
             $url = rtrim($_GET['url'], '/');

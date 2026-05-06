@@ -22,14 +22,6 @@ document.addEventListener('DOMContentLoaded', function() {
 /**
  * BONUS 1: AJAX - Sistema de Likes sin recargar página
  */
-/**
- * initializeLikeButtons - Descripción de la función initializeLikeButtons (añadir detalle).
- * @returns {any} Descripción del valor devuelto.
- */
-/**
- * initializeLikeButtons - Descripción de la función initializeLikeButtons (añadir detalle).
- * @returns {any} Descripción del valor devuelto.
- */
 function initializeLikeButtons() {
     const likeButtons = document.querySelectorAll('.btn-like');
     
@@ -76,14 +68,6 @@ function initializeLikeButtons() {
 
 /**
  * BONUS 1: AJAX - Sistema de Comentarios dinámico
- */
-/**
- * initializeCommentForms - Descripción de la función initializeCommentForms (añadir detalle).
- * @returns {any} Descripción del valor devuelto.
- */
-/**
- * initializeCommentForms - Descripción de la función initializeCommentForms (añadir detalle).
- * @returns {any} Descripción del valor devuelto.
  */
 function initializeCommentForms() {
     const commentForms = document.querySelectorAll('.comment-form');
@@ -139,14 +123,6 @@ function initializeCommentForms() {
 /**
  * BONUS 3: Scroll Infinito - Carga automática de imágenes
  */
-/**
- * initializeInfiniteScroll - Descripción de la función initializeInfiniteScroll (añadir detalle).
- * @returns {any} Descripción del valor devuelto.
- */
-/**
- * initializeInfiniteScroll - Descripción de la función initializeInfiniteScroll (añadir detalle).
- * @returns {any} Descripción del valor devuelto.
- */
 function initializeInfiniteScroll() {
     // Verificar si ya hay un observador
     if (GalleryState.observerInitialized) return;
@@ -180,22 +156,6 @@ function initializeInfiniteScroll() {
     }
 }
 
-/**
-
- * createSentinel - Descripción de la función createSentinel (añadir detalle).
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
-/**
-
- * createSentinel - Descripción de la función createSentinel (añadir detalle).
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
 function createSentinel() {
     const galleryGrid = document.querySelector('.gallery-grid');
     if (!galleryGrid) return;
@@ -208,22 +168,6 @@ function createSentinel() {
     // Insertar después de la galería
     galleryGrid.parentNode.insertBefore(sentinel, galleryGrid.nextSibling);
 }
-
-/**
-
- * loadMoreImages - Descripción de la función loadMoreImages (añadir detalle).
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
-/**
-
- * loadMoreImages - Descripción de la función loadMoreImages (añadir detalle).
-
- * @returns {any} Descripción del valor devuelto.
-
- */
 
 function loadMoreImages() {
     if (GalleryState.loading) return;
@@ -263,30 +207,6 @@ function loadMoreImages() {
         });
 }
 
-/**
-
- * appendImages - Descripción de la función appendImages (añadir detalle).
-
- *
-
- * @param {any} images Descripción de images.
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
-/**
-
- * appendImages - Descripción de la función appendImages (añadir detalle).
-
- *
-
- * @param {any} images Descripción de images.
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
 function appendImages(images) {
     const galleryGrid = document.querySelector('.gallery-grid');
     if (!galleryGrid) return;
@@ -301,30 +221,6 @@ function appendImages(images) {
     initializeCommentForms();
     initializeShareButtons();
 }
-
-/**
-
- * createImageCard - Descripción de la función createImageCard (añadir detalle).
-
- *
-
- * @param {any} image Descripción de image.
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
-/**
-
- * createImageCard - Descripción de la función createImageCard (añadir detalle).
-
- *
-
- * @param {any} image Descripción de image.
-
- * @returns {any} Descripción del valor devuelto.
-
- */
 
 function createImageCard(image) {
     const card = document.createElement('div');
@@ -362,14 +258,6 @@ function createImageCard(image) {
 /**
  * BONUS 4: Compartir en Redes Sociales
  */
-/**
- * initializeShareButtons - Descripción de la función initializeShareButtons (añadir detalle).
- * @returns {any} Descripción del valor devuelto.
- */
-/**
- * initializeShareButtons - Descripción de la función initializeShareButtons (añadir detalle).
- * @returns {any} Descripción del valor devuelto.
- */
 function initializeShareButtons() {
     const shareButtons = document.querySelectorAll('.btn-share');
     
@@ -380,34 +268,6 @@ function initializeShareButtons() {
         });
     });
 }
-
-/**
-
- * showShareModal - Descripción de la función showShareModal (añadir detalle).
-
- *
-
- * @param {any} imageId Descripción de imageId.
-
- * @param {any} filename Descripción de filename.
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
-/**
-
- * showShareModal - Descripción de la función showShareModal (añadir detalle).
-
- *
-
- * @param {any} imageId Descripción de imageId.
-
- * @param {any} filename Descripción de filename.
-
- * @returns {any} Descripción del valor devuelto.
-
- */
 
 function showShareModal(imageId, filename) {
     const appUrl = window.location.origin;
@@ -450,30 +310,6 @@ function showShareModal(imageId, filename) {
     });
 }
 
-/**
-
- * copyToClipboard - Descripción de la función copyToClipboard (añadir detalle).
-
- *
-
- * @param {any} text Descripción de text.
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
-/**
-
- * copyToClipboard - Descripción de la función copyToClipboard (añadir detalle).
-
- *
-
- * @param {any} text Descripción de text.
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
         showNotification('¡Enlace copiado!', 'success');
@@ -483,20 +319,6 @@ function copyToClipboard(text) {
 }
 
 // Funciones auxiliares
-/**
- * addCommentToList - Descripción de la función addCommentToList (añadir detalle).
- *
- * @param {any} imageId Descripción de imageId.
- * @param {any} comment Descripción de comment.
- * @returns {any} Descripción del valor devuelto.
- */
-/**
- * addCommentToList - Descripción de la función addCommentToList (añadir detalle).
- *
- * @param {any} imageId Descripción de imageId.
- * @param {any} comment Descripción de comment.
- * @returns {any} Descripción del valor devuelto.
- */
 function addCommentToList(imageId, comment) {
     const commentsList = document.querySelector(`[data-image-id="${imageId}"] .comments-list`);
     if (!commentsList) return;
@@ -512,30 +334,6 @@ function addCommentToList(imageId, comment) {
     commentsList.prepend(commentElement);
 }
 
-/**
-
- * updateCommentCount - Descripción de la función updateCommentCount (añadir detalle).
-
- *
-
- * @param {any} imageId Descripción de imageId.
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
-/**
-
- * updateCommentCount - Descripción de la función updateCommentCount (añadir detalle).
-
- *
-
- * @param {any} imageId Descripción de imageId.
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
 function updateCommentCount(imageId) {
     const countElement = document.querySelector(`[data-image-id="${imageId}"] .comment-count`);
     if (!countElement) return;
@@ -543,22 +341,6 @@ function updateCommentCount(imageId) {
     const currentCount = parseInt(countElement.textContent);
     countElement.textContent = `${currentCount + 1} comentarios`;
 }
-
-/**
-
- * showLoadingIndicator - Descripción de la función showLoadingIndicator (añadir detalle).
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
-/**
-
- * showLoadingIndicator - Descripción de la función showLoadingIndicator (añadir detalle).
-
- * @returns {any} Descripción del valor devuelto.
-
- */
 
 function showLoadingIndicator() {
     let indicator = document.querySelector('.loading-indicator');
@@ -571,22 +353,6 @@ function showLoadingIndicator() {
     indicator.style.display = 'block';
 }
 
-/**
-
- * hideLoadingIndicator - Descripción de la función hideLoadingIndicator (añadir detalle).
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
-/**
-
- * hideLoadingIndicator - Descripción de la función hideLoadingIndicator (añadir detalle).
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
 function hideLoadingIndicator() {
     const indicator = document.querySelector('.loading-indicator');
     if (indicator) {
@@ -594,52 +360,12 @@ function hideLoadingIndicator() {
     }
 }
 
-/**
-
- * showEndMessage - Descripción de la función showEndMessage (añadir detalle).
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
-/**
-
- * showEndMessage - Descripción de la función showEndMessage (añadir detalle).
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
 function showEndMessage() {
     const message = document.createElement('div');
     message.className = 'end-message';
     message.textContent = '¡Has visto todas las fotos! 🎉';
     document.querySelector('.gallery-sentinel').before(message);
 }
-
-/**
-
- * formatDate - Descripción de la función formatDate (añadir detalle).
-
- *
-
- * @param {any} dateString Descripción de dateString.
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
-/**
-
- * formatDate - Descripción de la función formatDate (añadir detalle).
-
- *
-
- * @param {any} dateString Descripción de dateString.
-
- * @returns {any} Descripción del valor devuelto.
-
- */
 
 function formatDate(dateString) {
     const date = new Date(dateString);
@@ -668,54 +394,10 @@ function formatDate(dateString) {
     });
 }
 
-/**
-
- * getCsrfToken - Descripción de la función getCsrfToken (añadir detalle).
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
-/**
-
- * getCsrfToken - Descripción de la función getCsrfToken (añadir detalle).
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
 function getCsrfToken() {
     const tokenInput = document.querySelector('input[name="csrf_token"]');
     return tokenInput ? tokenInput.value : '';
 }
-
-/**
-
- * showNotification - Descripción de la función showNotification (añadir detalle).
-
- *
-
- * @param {any} message Descripción de message.
-
- * @param {any} type Descripción de type.
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
-/**
-
- * showNotification - Descripción de la función showNotification (añadir detalle).
-
- *
-
- * @param {any} message Descripción de message.
-
- * @param {any} type Descripción de type.
-
- * @returns {any} Descripción del valor devuelto.
-
- */
 
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');

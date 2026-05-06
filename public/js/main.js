@@ -50,30 +50,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-/**
-
- * getPasswordStrength - Descripción de la función getPasswordStrength (añadir detalle).
-
- *
-
- * @param {any} password Descripción de password.
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
-/**
-
- * getPasswordStrength - Descripción de la función getPasswordStrength (añadir detalle).
-
- *
-
- * @param {any} password Descripción de password.
-
- * @returns {any} Descripción del valor devuelto.
-
- */
-
 function getPasswordStrength(password) {
     let strength = 0;
     if (password.length >= 8) strength++;
@@ -85,24 +61,6 @@ function getPasswordStrength(password) {
 }
 
 // AJAX helper function
-/**
- * ajax - Descripción de la función ajax (añadir detalle).
- *
- * @param {any} url Descripción de url.
- * @param {any} method Descripción de method.
- * @param {any} data Descripción de data.
- * @param {any} callback Descripción de callback.
- * @returns {any} Descripción del valor devuelto.
- */
-/**
- * ajax - Descripción de la función ajax (añadir detalle).
- *
- * @param {any} url Descripción de url.
- * @param {any} method Descripción de method.
- * @param {any} data Descripción de data.
- * @param {any} callback Descripción de callback.
- * @returns {any} Descripción del valor devuelto.
- */
 function ajax(url, method, data, callback) {
     const xhr = new XMLHttpRequest();
     xhr.open(method, url, true);

@@ -13,15 +13,39 @@ class EditorController extends Controller {
      * @return mixed
 
      */
+/**
+ * Método principal de visualización/entrada para esta ruta.
+ *
+ * Descripción detallada:
+ * Este método `index` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->index();
+ * ```
+ */
 
-    /**
-
-     * Método index.
-
-     * @return mixed
-
-     */
-
+/**
+ * Método principal de visualización/entrada para esta ruta.
+ *
+ * Descripción detallada:
+ * Este método `index` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->index();
+ * ```
+ */
     public function index() {
         $this->requireAuth();
 
@@ -45,15 +69,39 @@ class EditorController extends Controller {
      * @return mixed
 
      */
+/**
+ * Método `capture` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `capture` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->capture();
+ * ```
+ */
 
-    /**
-
-     * Método capture.
-
-     * @return mixed
-
-     */
-
+/**
+ * Método `capture` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `capture` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->capture();
+ * ```
+ */
     public function capture() {
         $this->requireAuth();
 
@@ -143,15 +191,39 @@ class EditorController extends Controller {
      * @return mixed
 
      */
+/**
+ * Método `upload` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `upload` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->upload();
+ * ```
+ */
 
-    /**
-
-     * Método upload.
-
-     * @return mixed
-
-     */
-
+/**
+ * Método `upload` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `upload` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->upload();
+ * ```
+ */
     public function upload() {
         $this->requireAuth();
 
@@ -242,15 +314,39 @@ class EditorController extends Controller {
      * @return mixed
 
      */
+/**
+ * Elimina el recurso indicado en la base de datos.
+ *
+ * Descripción detallada:
+ * Este método `delete` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->delete();
+ * ```
+ */
 
-    /**
-
-     * Método delete.
-
-     * @return mixed
-
-     */
-
+/**
+ * Elimina el recurso indicado en la base de datos.
+ *
+ * Descripción detallada:
+ * Este método `delete` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->delete();
+ * ```
+ */
     public function delete() {
         $this->requireAuth();
 
@@ -275,15 +371,39 @@ class EditorController extends Controller {
      * @return mixed
 
      */
+/**
+ * Obtiene stickers y lo devuelve.
+ *
+ * Descripción detallada:
+ * Este método `getStickers` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->getStickers();
+ * ```
+ */
 
-    /**
-
-     * Método getStickers.
-
-     * @return mixed
-
-     */
-
+/**
+ * Obtiene stickers y lo devuelve.
+ *
+ * Descripción detallada:
+ * Este método `getStickers` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->getStickers();
+ * ```
+ */
     private function getStickers() {
         $stickersDir = '../public/stickers/';
         $stickers = [];
@@ -311,19 +431,41 @@ class EditorController extends Controller {
      * @return mixed
 
      */
+/**
+ * Método `loadImageWithAlpha` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `loadImageWithAlpha` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $filepath Descripción detallada de $filepath.
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->loadImageWithAlpha($filepath);
+ * ```
+ */
 
-    /**
-
-     * Método loadImageWithAlpha.
-
-     *
-
-     * @param mixed $filepath Descripción del parámetro $filepath.
-
-     * @return mixed
-
-     */
-
+/**
+ * Método `loadImageWithAlpha` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `loadImageWithAlpha` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $filepath Descripción detallada de $filepath.
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->loadImageWithAlpha($filepath);
+ * ```
+ */
     private function loadImageWithAlpha($filepath) {
         $info = getimagesize($filepath);
         if ($info === false) {
@@ -369,21 +511,43 @@ class EditorController extends Controller {
      * @return mixed
 
      */
+/**
+ * Método `mergeImages` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `mergeImages` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $baseImage Descripción detallada de $baseImage.
+ * @param mixed $sticker Descripción detallada de $sticker.
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->mergeImages($baseImage, $sticker);
+ * ```
+ */
 
-    /**
-
-     * Método mergeImages.
-
-     *
-
-     * @param mixed $baseImage Descripción del parámetro $baseImage.
-
-     * @param mixed $sticker Descripción del parámetro $sticker.
-
-     * @return mixed
-
-     */
-
+/**
+ * Método `mergeImages` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `mergeImages` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $baseImage Descripción detallada de $baseImage.
+ * @param mixed $sticker Descripción detallada de $sticker.
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->mergeImages($baseImage, $sticker);
+ * ```
+ */
     private function mergeImages($baseImage, $sticker) {
         $baseWidth = imagesx($baseImage);
         $baseHeight = imagesy($baseImage);
@@ -416,15 +580,39 @@ class EditorController extends Controller {
      * @return mixed
 
      */
+/**
+ * Método `generateFilename` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `generateFilename` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->generateFilename();
+ * ```
+ */
 
-    /**
-
-     * Método generateFilename.
-
-     * @return mixed
-
-     */
-
+/**
+ * Método `generateFilename` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `generateFilename` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->generateFilename();
+ * ```
+ */
     private function generateFilename() {
         return 'img_' . $_SESSION['user_id'] . '_' . time() . '_' . bin2hex(random_bytes(8)) . '.png';
     }
@@ -437,10 +625,22 @@ class EditorController extends Controller {
      * Método createGif.
      * @return mixed
      */
-    /**
-     * Método createGif.
-     * @return mixed
-     */
+/**
+ * Persiste datos en la base de datos relacionados con este recurso.
+ *
+ * Descripción detallada:
+ * Este método `createGif` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->createGif();
+ * ```
+ */
     public function createGif() {
         $this->requireAuth();
 

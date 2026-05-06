@@ -24,12 +24,23 @@ class Controller {
          * @param mixed $model Descripción del parámetro $model.
          * @return mixed
          */
-        /**
-         * Carga y devuelve una instancia del modelo solicitado.
-         *
-         * @param mixed $model Descripción del parámetro $model.
-         * @return mixed
-         */
+/**
+ * Método `model` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `model` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $model Descripción detallada de $model.
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->model($model);
+ * ```
+ */
         protected function model($model) {
         require_once '../app/models/' . $model . '.php';
         return new $model();
@@ -63,13 +74,24 @@ class Controller {
      * @param mixed $param Descripción del parámetro $param.
      * @return mixed
      */
-    /**
-     * Renderiza una vista pasando datos a su scope.
-     *
-     * @param mixed $view Descripción del parámetro $view.
-     * @param mixed $param Descripción del parámetro $param.
-     * @return mixed
-     */
+/**
+ * Método principal de visualización/entrada para esta ruta.
+ *
+ * Descripción detallada:
+ * Este método `view` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $view Descripción detallada de $view.
+ * @param mixed [] Descripción detallada de [].
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->view($view, []);
+ * ```
+ */
     protected function view($view, $data = []) {
         extract($data);
         require_once '../app/views/' . $view . '.php';
@@ -85,12 +107,23 @@ class Controller {
      * @param mixed $url Descripción del parámetro $url.
      * @return mixed
      */
-    /**
-     * Redirige a la URL proporcionada.
-     *
-     * @param mixed $url Descripción del parámetro $url.
-     * @return mixed
-     */
+/**
+ * Realiza una redirección o genera una URL basada en la ruta indicada.
+ *
+ * Descripción detallada:
+ * Este método `redirect` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $url Descripción detallada de $url.
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->redirect($url);
+ * ```
+ */
     protected function redirect($url) {
         header('Location: ' . $this->url($url));
         exit();
@@ -107,12 +140,23 @@ class Controller {
      * @param mixed $param Descripción del parámetro $param.
      * @return mixed
      */
-    /**
-     * Construye la URL completa basada en la configuración de la aplicación.
-     *
-     * @param mixed $param Descripción del parámetro $param.
-     * @return mixed
-     */
+/**
+ * Realiza una redirección o genera una URL basada en la ruta indicada.
+ *
+ * Descripción detallada:
+ * Este método `url` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed '' Descripción detallada de ''.
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->url('');
+ * ```
+ */
     protected function url($path = '') {
         $baseUrl = rtrim(Config::get('APP_URL', 'http://localhost:8080'), '/');
         return $baseUrl . '/' . ltrim($path, '/');
@@ -130,13 +174,24 @@ class Controller {
      * @param mixed $param Descripción del parámetro $param.
      * @return mixed
      */
-    /**
-     * Envía una respuesta JSON y finaliza la ejecución.
-     *
-     * @param mixed $data Descripción del parámetro $data.
-     * @param mixed $param Descripción del parámetro $param.
-     * @return mixed
-     */
+/**
+ * Método `json` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `json` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $data Descripción detallada de $data.
+ * @param mixed 200 Descripción detallada de 200.
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->json($data, 200);
+ * ```
+ */
     protected function json($data, $status = 200) {
         http_response_code($status);
         header('Content-Type: application/json');
@@ -152,10 +207,22 @@ class Controller {
      * Comprueba si la petición actual es de tipo POST.
      * @return mixed
      */
-    /**
-     * Comprueba si la petición actual es de tipo POST.
-     * @return mixed
-     */
+/**
+ * Comprueba si post y devuelve booleano.
+ *
+ * Descripción detallada:
+ * Este método `isPost` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->isPost();
+ * ```
+ */
     protected function isPost() {
         return $_SERVER['REQUEST_METHOD'] === 'POST';
     }
@@ -168,10 +235,22 @@ class Controller {
      * Comprueba si la petición actual es de tipo GET.
      * @return mixed
      */
-    /**
-     * Comprueba si la petición actual es de tipo GET.
-     * @return mixed
-     */
+/**
+ * Comprueba si get y devuelve booleano.
+ *
+ * Descripción detallada:
+ * Este método `isGet` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->isGet();
+ * ```
+ */
     protected function isGet() {
         return $_SERVER['REQUEST_METHOD'] === 'GET';
     }
@@ -184,10 +263,22 @@ class Controller {
      * Valida el token CSRF enviado en el formulario contra el token en sesión.
      * @return mixed
      */
-    /**
-     * Valida el token CSRF enviado en el formulario contra el token en sesión.
-     * @return mixed
-     */
+/**
+ * Valida los datos proporcionados para csrf.
+ *
+ * Descripción detallada:
+ * Este método `validateCSRF` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->validateCSRF();
+ * ```
+ */
     protected function validateCSRF() {
         if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token'])) {
             return false;
@@ -203,10 +294,22 @@ class Controller {
      * Genera y devuelve un token CSRF almacenado en la sesión si no existe.
      * @return mixed
      */
-    /**
-     * Genera y devuelve un token CSRF almacenado en la sesión si no existe.
-     * @return mixed
-     */
+/**
+ * Método `generateCSRF` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `generateCSRF` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->generateCSRF();
+ * ```
+ */
     protected function generateCSRF() {
         if (!isset($_SESSION['csrf_token'])) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -234,12 +337,23 @@ class Controller {
          * @param mixed $data Descripción del parámetro $data.
          * @return mixed
          */
-        /**
-         * Sanea recursivamente una entrada para evitar XSS y etiquetas.
-         *
-         * @param mixed $data Descripción del parámetro $data.
-         * @return mixed
-         */
+/**
+ * Método `sanitize` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `sanitize` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $data Descripción detallada de $data.
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->sanitize($data);
+ * ```
+ */
         protected function sanitize($data) {
         if (is_array($data)) {
             foreach ($data as $key => $value) {
@@ -258,10 +372,22 @@ class Controller {
      * Fuerza que la ruta requiera autenticación.
      * @return mixed
      */
-    /**
-     * Fuerza que la ruta requiera autenticación.
-     * @return mixed
-     */
+/**
+ * Método `requireAuth` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `requireAuth` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->requireAuth();
+ * ```
+ */
     protected function requireAuth() {
         if (!isset($_SESSION['user_id'])) {
             $_SESSION['flash_error'] = 'You must be logged in to access this page.';
@@ -277,10 +403,22 @@ class Controller {
      * Fuerza que la ruta sea accesible solo por invitados (no autenticados).
      * @return mixed
      */
-    /**
-     * Fuerza que la ruta sea accesible solo por invitados (no autenticados).
-     * @return mixed
-     */
+/**
+ * Método `requireGuest` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `requireGuest` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->requireGuest();
+ * ```
+ */
     protected function requireGuest() {
         if (isset($_SESSION['user_id'])) {
             $this->redirect('home');

@@ -5,23 +5,39 @@
  * Handles user profile and settings
  */
 class UserController extends Controller {
+/**
+ * Método `profile` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `profile` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->profile();
+ * ```
+ */
 
-    /**
-
-     * Método profile.
-
-     * @return mixed
-
-     */
-
-    /**
-
-     * Método profile.
-
-     * @return mixed
-
-     */
-
+/**
+ * Método `profile` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `profile` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->profile();
+ * ```
+ */
     public function profile() {
         $this->requireAuth();
 
@@ -38,23 +54,39 @@ class UserController extends Controller {
             'image_count' => $imageCount
         ]);
     }
+/**
+ * Establece el valor de tings proporcionado.
+ *
+ * Descripción detallada:
+ * Este método `settings` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->settings();
+ * ```
+ */
 
-    /**
-
-     * Método settings.
-
-     * @return mixed
-
-     */
-
-    /**
-
-     * Método settings.
-
-     * @return mixed
-
-     */
-
+/**
+ * Establece el valor de tings proporcionado.
+ *
+ * Descripción detallada:
+ * Este método `settings` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->settings();
+ * ```
+ */
     public function settings() {
         $this->requireAuth();
 
@@ -83,35 +115,43 @@ class UserController extends Controller {
             'csrf_token' => $this->generateCSRF()
         ]);
     }
+/**
+ * Método `updateProfile` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `updateProfile` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $userModel Descripción detallada de $userModel.
+ * @param mixed $user Descripción detallada de $user.
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->updateProfile($userModel, $user);
+ * ```
+ */
 
-    /**
-
-     * Método updateProfile.
-
-     *
-
-     * @param mixed $userModel Descripción del parámetro $userModel.
-
-     * @param mixed $user Descripción del parámetro $user.
-
-     * @return mixed
-
-     */
-
-    /**
-
-     * Método updateProfile.
-
-     *
-
-     * @param mixed $userModel Descripción del parámetro $userModel.
-
-     * @param mixed $user Descripción del parámetro $user.
-
-     * @return mixed
-
-     */
-
+/**
+ * Método `updateProfile` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `updateProfile` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $userModel Descripción detallada de $userModel.
+ * @param mixed $user Descripción detallada de $user.
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->updateProfile($userModel, $user);
+ * ```
+ */
     private function updateProfile($userModel, $user) {
         $username = $this->sanitize($_POST['username'] ?? '');
         $email = $this->sanitize($_POST['email'] ?? '');
@@ -147,35 +187,43 @@ class UserController extends Controller {
 
         $this->redirect('settings');
     }
+/**
+ * Método `changePassword` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `changePassword` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $userModel Descripción detallada de $userModel.
+ * @param mixed $user Descripción detallada de $user.
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->changePassword($userModel, $user);
+ * ```
+ */
 
-    /**
-
-     * Método changePassword.
-
-     *
-
-     * @param mixed $userModel Descripción del parámetro $userModel.
-
-     * @param mixed $user Descripción del parámetro $user.
-
-     * @return mixed
-
-     */
-
-    /**
-
-     * Método changePassword.
-
-     *
-
-     * @param mixed $userModel Descripción del parámetro $userModel.
-
-     * @param mixed $user Descripción del parámetro $user.
-
-     * @return mixed
-
-     */
-
+/**
+ * Método `changePassword` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `changePassword` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $userModel Descripción detallada de $userModel.
+ * @param mixed $user Descripción detallada de $user.
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->changePassword($userModel, $user);
+ * ```
+ */
     private function changePassword($userModel, $user) {
         $currentPassword = $_POST['current_password'] ?? '';
         $newPassword = $_POST['new_password'] ?? '';
@@ -207,31 +255,41 @@ class UserController extends Controller {
 
         $this->redirect('settings');
     }
+/**
+ * Método `updateNotifications` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `updateNotifications` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $userModel Descripción detallada de $userModel.
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->updateNotifications($userModel);
+ * ```
+ */
 
-    /**
-
-     * Método updateNotifications.
-
-     *
-
-     * @param mixed $userModel Descripción del parámetro $userModel.
-
-     * @return mixed
-
-     */
-
-    /**
-
-     * Método updateNotifications.
-
-     *
-
-     * @param mixed $userModel Descripción del parámetro $userModel.
-
-     * @return mixed
-
-     */
-
+/**
+ * Método `updateNotifications` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `updateNotifications` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $userModel Descripción detallada de $userModel.
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->updateNotifications($userModel);
+ * ```
+ */
     private function updateNotifications($userModel) {
         $notifyComments = isset($_POST['notify_comments']) ? 1 : 0;
 

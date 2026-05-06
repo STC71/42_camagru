@@ -1,4 +1,7 @@
-<?php
+<?php   
+// Este tag de apertura es necesario para que el código PHP funcione correctamente. 
+// Asegúrate de que no haya espacios o líneas en blanco antes de este tag para 
+// evitar errores de encabezado.
 
 /**
  * AuthController
@@ -13,15 +16,39 @@ class AuthController extends Controller {
      * @return mixed
 
      */
+/**
+ * Gestiona la autenticación/registro de usuarios.
+ *
+ * Descripción detallada:
+ * Este método `login` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->login();
+ * ```
+ */
 
-    /**
-
-     * Método login.
-
-     * @return mixed
-
-     */
-
+/**
+ * Gestiona la autenticación/registro de usuarios.
+ *
+ * Descripción detallada:
+ * Este método `login` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->login();
+ * ```
+ */
     public function login() {
         $this->requireGuest();
 
@@ -69,15 +96,39 @@ class AuthController extends Controller {
      * @return mixed
 
      */
+/**
+ * Gestiona la autenticación/registro de usuarios.
+ *
+ * Descripción detallada:
+ * Este método `register` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->register();
+ * ```
+ */
 
-    /**
-
-     * Método register.
-
-     * @return mixed
-
-     */
-
+/**
+ * Gestiona la autenticación/registro de usuarios.
+ *
+ * Descripción detallada:
+ * Este método `register` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->register();
+ * ```
+ */
     public function register() {
         $this->requireGuest();
 
@@ -159,15 +210,39 @@ class AuthController extends Controller {
      * @return mixed
 
      */
+/**
+ * Método `verify` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `verify` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->verify();
+ * ```
+ */
 
-    /**
-
-     * Método verify.
-
-     * @return mixed
-
-     */
-
+/**
+ * Método `verify` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `verify` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->verify();
+ * ```
+ */
     public function verify() {
         $token = $_GET['token'] ?? '';
 
@@ -200,15 +275,39 @@ class AuthController extends Controller {
      * @return mixed
 
      */
+/**
+ * Método `forgotPassword` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `forgotPassword` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->forgotPassword();
+ * ```
+ */
 
-    /**
-
-     * Método forgotPassword.
-
-     * @return mixed
-
-     */
-
+/**
+ * Método `forgotPassword` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `forgotPassword` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->forgotPassword();
+ * ```
+ */
     public function forgotPassword() {
         $this->requireGuest();
 
@@ -252,15 +351,39 @@ class AuthController extends Controller {
      * @return mixed
 
      */
+/**
+ * Método `resetPassword` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `resetPassword` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->resetPassword();
+ * ```
+ */
 
-    /**
-
-     * Método resetPassword.
-
-     * @return mixed
-
-     */
-
+/**
+ * Método `resetPassword` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `resetPassword` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->resetPassword();
+ * ```
+ */
     public function resetPassword() {
         $token = $_GET['token'] ?? '';
 
@@ -323,15 +446,39 @@ class AuthController extends Controller {
      * @return mixed
 
      */
+/**
+ * Gestiona la autenticación/registro de usuarios.
+ *
+ * Descripción detallada:
+ * Este método `logout` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->logout();
+ * ```
+ */
 
-    /**
-
-     * Método logout.
-
-     * @return mixed
-
-     */
-
+/**
+ * Gestiona la autenticación/registro de usuarios.
+ *
+ * Descripción detallada:
+ * Este método `logout` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->logout();
+ * ```
+ */
     public function logout() {
         session_destroy();
         header('Location: ' . $this->url('home'));

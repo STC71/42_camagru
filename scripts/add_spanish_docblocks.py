@@ -63,13 +63,31 @@ def param_tag_list(param_str):
 
 def make_docblock_for_method(name, params):
     desc = describe_from_name(name)
-    lines = ['/**', f' * {desc}', ' *']
-    for p in params:
-        # ensure $ present
-        if not p.startswith('$'):
-            p = p
-        lines.append(f' * @param mixed {p} Descripción del parámetro {p}.')
-    lines.append(' * @return mixed Resultado de la operación.')
+    # Construimos docblock más detallado al estilo solicitado
+    lines = [
+        '/**',
+        f' * {desc}',
+        ' *',
+        ' * Descripción detallada:',
+        f' * Este método `{name}` realiza la operación descrita arriba. Se recomienda',
+        ' * revisar las validaciones previas y sanitización de los parámetros antes',
+        ' * de invocar este método. No modifica el estado global salvo se indique.',
+        ' *',
+    ]
+    if params:
+        for p in params:
+            pname = p
+            # normalizar nombres de parámetros
+            pname = pname.strip()
+            lines.append(f' * @param mixed {pname} Descripción detallada de {pname}.')
+    lines.append(' *')
+    lines.append(' * @return mixed Resultado de la operación (tipo dependiendo del contexto).')
+    lines.append(' *')
+    lines.append(' * Ejemplo de uso:')
+    lines.append(f' * ```php')
+    example_params = ', '.join([p for p in params]) if params else ''
+    lines.append(f' * $this->{name}({example_params});')
+    lines.append(' * ```')
     lines.append(' */')
     return '\n'.join(lines)
 

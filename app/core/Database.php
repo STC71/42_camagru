@@ -41,8 +41,56 @@ class Database {
 
     
      */
+/**
+ * Método `__construct` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `__construct` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->__construct();
+ * ```
+ */
 
+/**
+ * Método `__construct` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `__construct` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->__construct();
+ * ```
+ */
     
+/**
+ * Método `__construct` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `__construct` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->__construct();
+ * ```
+ */
     private function __construct() {
         try {
             // Incluimos variables $DB_DSN, $DB_USER y $DB_PASSWORD desde el config oficial
@@ -98,8 +146,56 @@ class Database {
 
     
      */
+/**
+ * Obtiene connection y lo devuelve.
+ *
+ * Descripción detallada:
+ * Este método `getConnection` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->getConnection();
+ * ```
+ */
 
+/**
+ * Obtiene connection y lo devuelve.
+ *
+ * Descripción detallada:
+ * Este método `getConnection` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->getConnection();
+ * ```
+ */
     
+/**
+ * Obtiene connection y lo devuelve.
+ *
+ * Descripción detallada:
+ * Este método `getConnection` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->getConnection();
+ * ```
+ */
     public function getConnection() {
         return $this->connection;
     }
@@ -159,8 +255,62 @@ class Database {
 
     
      */
+/**
+ * Método `query` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `query` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $sql Descripción detallada de $sql.
+ * @param mixed [] Descripción detallada de [].
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->query($sql, []);
+ * ```
+ */
 
+/**
+ * Método `query` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `query` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $sql Descripción detallada de $sql.
+ * @param mixed [] Descripción detallada de [].
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->query($sql, []);
+ * ```
+ */
     
+/**
+ * Método `query` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `query` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ * @param mixed $sql Descripción detallada de $sql.
+ * @param mixed [] Descripción detallada de [].
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->query($sql, []);
+ * ```
+ */
     public function query($sql, $params = []) {
         try {
             $stmt = $this->connection->prepare($sql);
@@ -205,8 +355,56 @@ class Database {
 
     
      */
+/**
+ * Método `lastInsertId` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `lastInsertId` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->lastInsertId();
+ * ```
+ */
 
+/**
+ * Método `lastInsertId` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `lastInsertId` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->lastInsertId();
+ * ```
+ */
     
+/**
+ * Método `lastInsertId` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `lastInsertId` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->lastInsertId();
+ * ```
+ */
     public function lastInsertId() {
         return $this->connection->lastInsertId();
     }

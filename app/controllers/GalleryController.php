@@ -21,7 +21,39 @@ class GalleryController extends Controller {
      * @return mixed
 
      */
+/**
+ * Método principal de visualización/entrada para esta ruta.
+ *
+ * Descripción detallada:
+ * Este método `index` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->index();
+ * ```
+ */
 
+/**
+ * Método principal de visualización/entrada para esta ruta.
+ *
+ * Descripción detallada:
+ * Este método `index` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->index();
+ * ```
+ */
     public function index() {
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
         $perPage = 5;
@@ -75,7 +107,39 @@ class GalleryController extends Controller {
      * @return mixed
 
      */
+/**
+ * Método `like` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `like` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->like();
+ * ```
+ */
 
+/**
+ * Método `like` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `like` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->like();
+ * ```
+ */
     public function like() {
         $this->requireAuth();
 
@@ -112,7 +176,39 @@ class GalleryController extends Controller {
      * @return mixed
 
      */
+/**
+ * Método `comment` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `comment` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->comment();
+ * ```
+ */
 
+/**
+ * Método `comment` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `comment` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->comment();
+ * ```
+ */
     public function comment() {
         $this->requireAuth();
 
@@ -179,6 +275,22 @@ class GalleryController extends Controller {
      * Método loadMore.
      * @return mixed
      */
+/**
+ * Método `loadMore` del controlador/clase.
+ *
+ * Descripción detallada:
+ * Este método `loadMore` realiza la operación descrita arriba. Se recomienda
+ * revisar las validaciones previas y sanitización de los parámetros antes
+ * de invocar este método. No modifica el estado global salvo se indique.
+ *
+ *
+ * @return mixed Resultado de la operación (tipo dependiendo del contexto).
+ *
+ * Ejemplo de uso:
+ * ```php
+ * $this->loadMore();
+ * ```
+ */
     public function loadMore() {
         // Obtener parámetros de paginación
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
