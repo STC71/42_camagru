@@ -258,6 +258,23 @@ else
     fi
 fi
 
+# ───────────────────────────────────────────────────────────────────
+# SECCIÓN: Verificación de tablas en la BD
+# ───────────────────────────────────────────────────────────────────
+# ✓ Buscamos 4 tablas CRÍTICAS creadas por database/init.sql:
+#   1. users    → Cuentas de usuario (username, email, password, tokens)
+#   2. images   → Metadatos de imágenes (filename, user_id, fecha)
+#   3. likes    → BONUS - Sistema de likes en imágenes
+#   4. comments → BONUS - Comentarios en imágenes
+#
+# ✓ ¿POR QUÉ FALTAN INICIALMENTE EN UN ARRANQUE FRESCO?
+#   → Docker crea la BD vacía (sin tablas)
+#   → MySQL no crea tablas automáticamente
+#   → database/init.sql se ofrece para crearlas
+#
+# ✓ ¿CUÁNDO SE OFRECE?
+#   → Cuando la BD existe pero está vacía
+#   → Es el punto ideal para ofrecer arreglarlo
 print_test_name "Tablas de base de datos" "Verificar que las tablas necesarias existen"
 REQUIRED_TABLES=("users" "images" "likes" "comments")
 TABLES_OK=true

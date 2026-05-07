@@ -27,7 +27,9 @@ services:
       - camagru_network
 
   db:
-    image: mysql:8.0
+    build:
+      context: ./database
+      dockerfile: Dockerfile
     container_name: camagru_db
     ports:
       - "3306:3306"
@@ -38,7 +40,6 @@ services:
       MYSQL_PASSWORD: ${DB_PASS}
     volumes:
       - db_data:/var/lib/mysql
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - camagru_network
 

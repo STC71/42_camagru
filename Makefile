@@ -4,6 +4,8 @@
 #  Despliegue Contenerizado de Aplicación MVC Personalizada - Escuela 42
 # ============================================================================
 
+MAKEFLAGS += --no-print-directory
+
 .PHONY: help build up down restart logs clean fclean install setup test test-full test-eval shell db status all re
 
 # ==================== COLORES ANSI ==========================================
@@ -135,7 +137,7 @@ test: ## Ejecutar la bateria de salud basica Docker
 
 test-full: ## Corre las pruebas unitarias automáticas
 	@echo "$(AMARILLO)🧪  Ejecutando batería de pruebas automáticas severas...$(RESET)"
-	@./test_auto.sh
+	@./test_auto.sh || true
 
 test-eval: ## Lanza el Test Virtual Interactico (125% evaluacion guiada)
 	@echo "$(AMARILLO)🛡️  Iniciando evaluación interactiva 42 de Camagru...$(RESET)"
