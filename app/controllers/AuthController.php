@@ -5,7 +5,7 @@
 
 /**
  * AuthController
- * Handles authentication: login, register, logout, verification, password reset
+ * Gestiona autenticacion: login, registro, logout, verificacion, restablecimiento de contrasena
  */
 class AuthController extends Controller {
 
@@ -145,7 +145,7 @@ class AuthController extends Controller {
 
             $errors = [];
 
-            // Validation
+            // Validación
             if (!Validator::required($username)) {
                 $errors[] = 'Username is required.';
             } elseif (!Validator::username($username)) {
@@ -334,7 +334,7 @@ class AuthController extends Controller {
                 }
             }
 
-            // Always show success to prevent email enumeration
+            // Siempre mostrar exito para evitar enumeracion de correos
             $_SESSION['flash_success'] = 'If that email exists, a password reset link has been sent.';
             $this->redirect('login');
         }

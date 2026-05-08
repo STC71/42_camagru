@@ -1,8 +1,8 @@
 <?php
 
 /**
- * Mailer Class
- * Handles email sending functionality
+ * Envía correos de la aplicación usando SMTP cuando hay credenciales
+ * disponibles, o `mail()` como respaldo en desarrollo.
  */
 class Mailer {
     
@@ -13,7 +13,7 @@ class Mailer {
         $username = Config::get('MAIL_USER');
         $password = Config::get('MAIL_PASS');
 
-        // Headers
+        // Cabeceras base del mensaje.
         $headers = "From: $from\r\n";
         $headers .= "Reply-To: $from\r\n";
         $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
@@ -23,17 +23,17 @@ class Mailer {
             $headers .= "Content-type: text/html; charset=utf-8\r\n";
         }
 
-        // For development with SMTP (like Mailtrap)
+        // Si hay credenciales SMTP, usamos ese canal.
         if ($host && $port && $username && $password) {
             return self::sendSMTP($to, $subject, $body, $headers, $host, $port, $username, $password);
         }
 
-        // Fallback to PHP mail()
+        // En caso contrario, caemos al envío nativo.
         return mail($to, $subject, $body, $headers);
     }
 
     private static function sendSMTP($to, $subject, $body, $headers, $host, $port, $username, $password) {
-        // Simple SMTP implementation
+        // Implementación SMTP simple, suficiente para desarrollo y Mailtrap.
         $socket = fsockopen($host, $port, $errno, $errstr, 30);
         if (!$socket) {
             error_log("SMTP connection failed: $errstr ($errno)");
@@ -41,13 +41,13 @@ class Mailer {
         }
 
         $from = Config::get('MAIL_FROM');
-        
-        // SMTP communication
+
+        // Comunicación SMTP básica.
         fgets($socket);
         fputs($socket, "EHLO " . Config::get('APP_URL') . "\r\n");
         fgets($socket);
         
-        // Authentication
+        // Autenticación
         fputs($socket, "AUTH LOGIN\r\n");
         fgets($socket);
         fputs($socket, base64_encode($username) . "\r\n");
@@ -55,7 +55,7 @@ class Mailer {
         fputs($socket, base64_encode($password) . "\r\n");
         fgets($socket);
         
-        // Send email
+        // Enviar correo
         fputs($socket, "MAIL FROM: <$from>\r\n");
         fgets($socket);
         fputs($socket, "RCPT TO: <$to>\r\n");
@@ -77,7 +77,7 @@ class Mailer {
     public static function sendVerificationEmail($email, $username, $token) {
         $verifyUrl = Config::get('APP_URL') . "/verify?token=$token";
         
-        $subject = "Verify your Camagru account";
+        $subject = "Verifica tu cuenta de Camagru";
         $body = "
         <html>
         <head>
@@ -90,11 +90,11 @@ class Mailer {
         </head>
         <body>
             <div class='container'>
-                <h2>Welcome to Camagru, $username!</h2>
-                <p>Thank you for registering. Please verify your email address by clicking the button below:</p>
-                <p><a href='$verifyUrl' class='button'>Verify Email</a></p>
-                <p>Or copy this link: <br>$verifyUrl</p>
-                <p>If you didn't create an account, please ignore this email.</p>
+                <h2>¡Bienvenido a Camagru, $username!</h2>
+                <p>Gracias por registrarte. Por favor, verifica tu correo electronico haciendo clic en el boton inferior:</p>
+                <p><a href='$verifyUrl' class='button'>Verificar Correo</a></p>
+                <p>O copia este enlace: <br>$verifyUrl</p>
+                <p>Si no creaste una cuenta, por favor ignora este correo.</p>
             </div>
         </body>
         </html>";
@@ -103,9 +103,10 @@ class Mailer {
     }
 
     public static function sendPasswordResetEmail($email, $username, $token) {
+        // Enlace temporal para restablecer la contraseña.
         $resetUrl = Config::get('APP_URL') . "/reset-password?token=$token";
         
-        $subject = "Reset your Camagru password";
+        $subject = "Restablece tu contraseña de Camagru";
         $body = "
         <html>
         <head>
@@ -118,13 +119,13 @@ class Mailer {
         </head>
         <body>
             <div class='container'>
-                <h2>Password Reset Request</h2>
-                <p>Hi $username,</p>
-                <p>We received a request to reset your password. Click the button below to set a new password:</p>
-                <p><a href='$resetUrl' class='button'>Reset Password</a></p>
-                <p>Or copy this link: <br>$resetUrl</p>
-                <p>This link will expire in 1 hour.</p>
-                <p>If you didn't request a password reset, please ignore this email.</p>
+                <h2>Solicitud de Restablecimiento de Contraseña</h2>
+                <p>Hola $username,</p>
+                <p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el boton inferior para establecer una nueva contraseña:</p>
+                <p><a href='$resetUrl' class='button'>Restablecer Contraseña</a></p>
+                <p>O copia este enlace: <br>$resetUrl</p>
+                <p>Este enlace expirará en 1 hora.</p>
+                <p>Si no solicitaste un restablecimiento de contraseña, por favor ignora este correo.</p>
             </div>
         </body>
         </html>";
@@ -133,9 +134,10 @@ class Mailer {
     }
 
     public static function sendCommentNotification($email, $username, $imageId, $commenter) {
+        // Enlace a la foto comentada.
         $imageUrl = Config::get('APP_URL') . "/gallery#image-$imageId";
         
-        $subject = "New comment on your photo";
+        $subject = "Nuevo comentario en tu foto";
         $body = "
         <html>
         <head>
@@ -148,11 +150,11 @@ class Mailer {
         </head>
         <body>
             <div class='container'>
-                <h2>New Comment on Your Photo</h2>
-                <p>Hi $username,</p>
-                <p><strong>$commenter</strong> commented on one of your photos.</p>
-                <p><a href='$imageUrl' class='button'>View Comment</a></p>
-                <p>You can change your notification preferences in your account settings.</p>
+                <h2>Nuevo Comentario en Tu Foto</h2>
+                <p>Hola $username,</p>
+                <p><strong>$commenter</strong> comento en una de tus fotos.</p>
+                <p><a href='$imageUrl' class='button'>Ver Comentario</a></p>
+                <p>Puedes cambiar tus preferencias de notificacion en la configuracion de tu cuenta.</p>
             </div>
         </body>
         </html>";

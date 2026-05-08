@@ -1,8 +1,8 @@
 <?php
 
 /**
- * Database Class
- * Handles database connections using PDO
+ * Clase de Base de Datos
+ * Gestiona conexiones de base de datos usando PDO
  */
 class Database {
     private static $instance = null;

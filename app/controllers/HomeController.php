@@ -2,7 +2,7 @@
 
 /**
  * HomeController
- * Handles the home page
+ * Gestiona la pagina de inicio
  */
 class HomeController extends Controller {
 /**

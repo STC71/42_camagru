@@ -1,43 +1,12 @@
 <?php
 
 /**
- * UserController
- * Handles user profile and settings
+ * Gestiona el perfil y los ajustes del usuario autenticado.
  */
 class UserController extends Controller {
-/**
- * Método `profile` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `profile` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->profile();
- * ```
- */
-
-/**
- * Método `profile` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `profile` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->profile();
- * ```
- */
+     /**
+      * Muestra el perfil del usuario autenticado junto con sus imágenes.
+      */
     public function profile() {
         $this->requireAuth();
 
@@ -54,39 +23,10 @@ class UserController extends Controller {
             'image_count' => $imageCount
         ]);
     }
-/**
- * Establece el valor de tings proporcionado.
- *
- * Descripción detallada:
- * Este método `settings` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->settings();
- * ```
- */
 
-/**
- * Establece el valor de tings proporcionado.
- *
- * Descripción detallada:
- * Este método `settings` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->settings();
- * ```
- */
+    /**
+     * Muestra la pantalla de ajustes y procesa sus formularios.
+     */
     public function settings() {
         $this->requireAuth();
 
@@ -115,43 +55,10 @@ class UserController extends Controller {
             'csrf_token' => $this->generateCSRF()
         ]);
     }
-/**
- * Método `updateProfile` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `updateProfile` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- * @param mixed $userModel Descripción detallada de $userModel.
- * @param mixed $user Descripción detallada de $user.
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->updateProfile($userModel, $user);
- * ```
- */
 
-/**
- * Método `updateProfile` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `updateProfile` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- * @param mixed $userModel Descripción detallada de $userModel.
- * @param mixed $user Descripción detallada de $user.
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->updateProfile($userModel, $user);
- * ```
- */
+    /**
+     * Procesa la actualización de nombre de usuario y email.
+     */
     private function updateProfile($userModel, $user) {
         $username = $this->sanitize($_POST['username'] ?? '');
         $email = $this->sanitize($_POST['email'] ?? '');
@@ -187,43 +94,10 @@ class UserController extends Controller {
 
         $this->redirect('settings');
     }
-/**
- * Método `changePassword` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `changePassword` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- * @param mixed $userModel Descripción detallada de $userModel.
- * @param mixed $user Descripción detallada de $user.
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->changePassword($userModel, $user);
- * ```
- */
 
-/**
- * Método `changePassword` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `changePassword` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- * @param mixed $userModel Descripción detallada de $userModel.
- * @param mixed $user Descripción detallada de $user.
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->changePassword($userModel, $user);
- * ```
- */
+    /**
+     * Procesa el cambio de contraseña del usuario.
+     */
     private function changePassword($userModel, $user) {
         $currentPassword = $_POST['current_password'] ?? '';
         $newPassword = $_POST['new_password'] ?? '';
@@ -255,41 +129,10 @@ class UserController extends Controller {
 
         $this->redirect('settings');
     }
-/**
- * Método `updateNotifications` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `updateNotifications` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- * @param mixed $userModel Descripción detallada de $userModel.
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->updateNotifications($userModel);
- * ```
- */
 
-/**
- * Método `updateNotifications` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `updateNotifications` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- * @param mixed $userModel Descripción detallada de $userModel.
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->updateNotifications($userModel);
- * ```
- */
+    /**
+     * Guarda la preferencia de notificaciones de comentarios.
+     */
     private function updateNotifications($userModel) {
         $notifyComments = isset($_POST['notify_comments']) ? 1 : 0;
 

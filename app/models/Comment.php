@@ -1,110 +1,22 @@
 <?php
 
 /**
- * Comment Model
- * Handles comment-related database operations
+ * Modelo de comentarios
+ * Gestiona las operaciones de base de datos de comentarios
  */
 class Comment {
     private $db;
 
     /**
-
-     * Método __construct.
-
-     * @return mixed
-
+     * Inicializa el modelo con el singleton de Database.
      */
-/**
- * Método `__construct` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `__construct` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->__construct();
- * ```
- */
-
-/**
- * Método `__construct` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `__construct` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->__construct();
- * ```
- */
     public function __construct() {
         $this->db = Database::getInstance();
     }
 
     /**
-
-     * Método create.
-
-     *
-
-     * @param mixed $imageId Descripción del parámetro $imageId.
-
-     * @param mixed $userId Descripción del parámetro $userId.
-
-     * @param mixed $comment Descripción del parámetro $comment.
-
-     * @return mixed
-
+     * Crea un nuevo comentario en una imagen y devuelve el ID del comentario.
      */
-/**
- * Persiste datos en la base de datos relacionados con este recurso.
- *
- * Descripción detallada:
- * Este método `create` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- * @param mixed $imageId Descripción detallada de $imageId.
- * @param mixed $userId Descripción detallada de $userId.
- * @param mixed $comment Descripción detallada de $comment.
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->create($imageId, $userId, $comment);
- * ```
- */
-
-/**
- * Persiste datos en la base de datos relacionados con este recurso.
- *
- * Descripción detallada:
- * Este método `create` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- * @param mixed $imageId Descripción detallada de $imageId.
- * @param mixed $userId Descripción detallada de $userId.
- * @param mixed $comment Descripción detallada de $comment.
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->create($imageId, $userId, $comment);
- * ```
- */
     public function create($imageId, $userId, $comment) {
         $sql = "INSERT INTO comments (image_id, user_id, comment) VALUES (?, ?, ?)";
         $result = $this->db->query($sql, [$imageId, $userId, $comment]);
@@ -116,59 +28,9 @@ class Comment {
     }
 
     /**
-
-     * Método findByImageId.
-
-     *
-
-     * @param mixed $imageId Descripción del parámetro $imageId.
-
-     * @param mixed $param Descripción del parámetro $param.
-
-     * @param mixed $param Descripción del parámetro $param.
-
-     * @return mixed
-
+     * Busca todos los comentarios de una imagen con informacion de usuario.
+     * Admite paginacion mediante limit y offset.
      */
-/**
- * Método `findByImageId` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `findByImageId` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- * @param mixed $imageId Descripción detallada de $imageId.
- * @param mixed null Descripción detallada de null.
- * @param mixed 0 Descripción detallada de 0.
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->findByImageId($imageId, null, 0);
- * ```
- */
-
-/**
- * Método `findByImageId` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `findByImageId` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- * @param mixed $imageId Descripción detallada de $imageId.
- * @param mixed null Descripción detallada de null.
- * @param mixed 0 Descripción detallada de 0.
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->findByImageId($imageId, null, 0);
- * ```
- */
     public function findByImageId($imageId, $limit = null, $offset = 0) {
         $sql = "SELECT c.*, u.username 
                 FROM comments c 
@@ -185,51 +47,8 @@ class Comment {
     }
 
     /**
-
-     * Método count.
-
-     *
-
-     * @param mixed $imageId Descripción del parámetro $imageId.
-
-     * @return mixed
-
+     * Cuenta el numero total de comentarios de una imagen.
      */
-/**
- * Método `count` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `count` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- * @param mixed $imageId Descripción detallada de $imageId.
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->count($imageId);
- * ```
- */
-
-/**
- * Método `count` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `count` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- * @param mixed $imageId Descripción detallada de $imageId.
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->count($imageId);
- * ```
- */
     public function count($imageId) {
         $sql = "SELECT COUNT(*) as total FROM comments WHERE image_id = ?";
         $stmt = $this->db->query($sql, [$imageId]);
@@ -238,57 +57,10 @@ class Comment {
     }
 
     /**
-
-     * Método delete.
-
-     *
-
-     * @param mixed $id Descripción del parámetro $id.
-
-     * @param mixed $userId Descripción del parámetro $userId.
-
-     * @return mixed
-
+     * Elimina un comentario si el usuario solicitante es su propietario.
      */
-/**
- * Elimina el recurso indicado en la base de datos.
- *
- * Descripción detallada:
- * Este método `delete` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- * @param mixed $id Descripción detallada de $id.
- * @param mixed $userId Descripción detallada de $userId.
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->delete($id, $userId);
- * ```
- */
-
-/**
- * Elimina el recurso indicado en la base de datos.
- *
- * Descripción detallada:
- * Este método `delete` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- * @param mixed $id Descripción detallada de $id.
- * @param mixed $userId Descripción detallada de $userId.
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->delete($id, $userId);
- * ```
- */
     public function delete($id, $userId) {
-        // Verify ownership
+        // Verificar propiedad
         $sql = "DELETE FROM comments WHERE id = ? AND user_id = ?";
         return $this->db->query($sql, [$id, $userId]) !== false;
     }

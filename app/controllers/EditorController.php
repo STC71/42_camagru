@@ -2,7 +2,7 @@
 
 /**
  * EditorController
- * Handles the photo editing functionality with webcam and stickers
+ * Gestiona la funcionalidad de edicion de fotos con camara web y pegatinas
  */
 class EditorController extends Controller {
 
@@ -52,7 +52,7 @@ class EditorController extends Controller {
         $imageModel = $this->model('Image');
         $userImages = $imageModel->findByUserId($_SESSION['user_id'], 10);
 
-        // Get available stickers
+        // Obtener pegatinas disponibles
         $stickers = $this->getStickers();
 
         $this->view('editor/index', [
@@ -109,7 +109,7 @@ class EditorController extends Controller {
             $this->json(['success' => false, 'message' => 'Invalid request'], 400);
         }
 
-        // Get base64 image data from webcam
+        // Obtener datos de imagen base64 de la camara web
         $imageData = $_POST['image'] ?? '';
         $stickerPath = $_POST['sticker'] ?? '';
 
@@ -121,7 +121,7 @@ class EditorController extends Controller {
             $this->json(['success' => false, 'message' => 'No sticker selected'], 400);
         }
 
-        // Decode base64 image
+        // Decodificar imagen base64
         $imageData = str_replace('data:image/png;base64,', '', $imageData);
         $imageData = str_replace(' ', '+', $imageData);
         $decodedImage = base64_decode($imageData);
@@ -130,13 +130,13 @@ class EditorController extends Controller {
             $this->json(['success' => false, 'message' => 'Invalid image data'], 400);
         }
 
-        // Create image from string
+        // Crear imagen desde string
         $baseImage = imagecreatefromstring($decodedImage);
         if ($baseImage === false) {
             $this->json(['success' => false, 'message' => 'Failed to process image'], 500);
         }
 
-        // Load sticker
+        // Cargar pegatina
         $stickerFullPath = '../public/' . $stickerPath;
         if (!file_exists($stickerFullPath)) {
             imagedestroy($baseImage);
@@ -149,15 +149,15 @@ class EditorController extends Controller {
             $this->json(['success' => false, 'message' => 'Failed to load sticker'], 500);
         }
 
-        // Merge images
+        // Combinar imagenes
         $finalImage = $this->mergeImages($baseImage, $sticker);
         
-        // Save final image
+        // Guardar imagen final
         $filename = $this->generateFilename();
         $filepath = '../public/uploads/images/' . $filename;
         
         if (imagepng($finalImage, $filepath)) {
-            // Save to database
+            // Guardar en base de datos
             $imageModel = $this->model('Image');
             $imageId = $imageModel->create($_SESSION['user_id'], $filename);
 
@@ -235,12 +235,12 @@ class EditorController extends Controller {
             $this->json(['success' => false, 'message' => 'No file uploaded'], 400);
         }
 
-        // CORRECCIÓN PDF EVAL: Subida admite opciones de 0, 1 o plurales pegatinas.
+        // CORRECCION PDF EVAL: La subida ahora admite 0, 1 o multiples pegatinas.
         $stickerPath = $_POST['sticker'] ?? '';
 
         $uploadedFile = $_FILES['image']['tmp_name'];
 
-        // Validate file
+        // Validar archivo
         if (!Validator::isImage($uploadedFile)) {
             $this->json(['success' => false, 'message' => 'Invalid image format'], 400);
         }
@@ -249,7 +249,7 @@ class EditorController extends Controller {
             $this->json(['success' => false, 'message' => 'File too large (max 5MB)'], 400);
         }
 
-        // Load uploaded image
+        // Cargar imagen subida
         $baseImage = $this->loadImageWithAlpha($uploadedFile);
         if ($baseImage === false) {
             $this->json(['success' => false, 'message' => 'Failed to process image'], 500);
@@ -257,7 +257,7 @@ class EditorController extends Controller {
 
         $finalImage = $baseImage; // Por defecto es la imagen base (caso 0 pegatinas)
 
-        // Si se envió pegatina, la procesamos y acoplamos
+        // Si se envio pegatina, la procesamos y acoplamos
         if (!empty($stickerPath)) {
             $stickerFullPath = '../public/' . $stickerPath;
             if (!file_exists($stickerFullPath)) {
@@ -271,23 +271,23 @@ class EditorController extends Controller {
                 $this->json(['success' => false, 'message' => 'Failed to load sticker'], 500);
             }
 
-            // Merge images
+            // Combinar imagenes
             $finalImage = $this->mergeImages($baseImage, $sticker);
-            // La base ya no es necesaria dado que finalImage crea imagen nueva con alpha y la une
+            // La base ya no es necesaria dado que finalImage crea imagen nueva
             imagedestroy($baseImage); 
             imagedestroy($sticker);
         }
         
-        // Save final image
+        // Guardar imagen final
         $filename = $this->generateFilename();
         $filepath = '../public/uploads/images/' . $filename;
         
         if (imagepng($finalImage, $filepath)) {
-            // Save to database
+            // Guardar en base de datos
             $imageModel = $this->model('Image');
             $imageId = $imageModel->create($_SESSION['user_id'], $filename);
 
-            // CORRECCIÓN PARA EVALUACIÓN: Limpieza dinámica de RAM
+            // CORRECCION PARA EVALUACION: Limpieza dinamica de RAM
             if (isset($finalImage)) imagedestroy($finalImage);
 
             if ($imageId) {
@@ -491,7 +491,7 @@ class EditorController extends Controller {
             return false;
         }
 
-        // Ensure alpha channel is preserved
+        // Asegurar que el canal alfa se preserva
         imagealphablending($image, true);
         imagesavealpha($image, true);
 
@@ -554,19 +554,19 @@ class EditorController extends Controller {
         $stickerWidth = imagesx($sticker);
         $stickerHeight = imagesy($sticker);
 
-        // Create final image
+        // Crear imagen final
         $finalImage = imagecreatetruecolor($baseWidth, $baseHeight);
         imagealphablending($finalImage, false);
         imagesavealpha($finalImage, true);
 
-        // Copy base image
+        // Copiar imagen base
         imagecopy($finalImage, $baseImage, 0, 0, 0, 0, $baseWidth, $baseHeight);
 
-        // Calculate sticker position (centered)
+        // Calcular posicion de pegatina (centrada)
         $x = ($baseWidth - $stickerWidth) / 2;
         $y = ($baseHeight - $stickerHeight) / 2;
 
-        // Merge sticker with alpha
+        // Combinar pegatina con alfa
         imagealphablending($finalImage, true);
         imagecopy($finalImage, $sticker, $x, $y, 0, 0, $stickerWidth, $stickerHeight);
 
@@ -648,7 +648,7 @@ class EditorController extends Controller {
             $this->json(['success' => false, 'message' => 'Invalid request'], 400);
         }
 
-        // Obtener frames y sticker
+        // Obtener frames y pegatina
         $framesData = json_decode($_POST['frames'] ?? '[]', true);
         $stickerPath = $_POST['sticker'] ?? '';
         $stickerX = intval($_POST['sticker_x'] ?? 0);
@@ -667,7 +667,7 @@ class EditorController extends Controller {
             $this->json(['success' => false, 'message' => 'No sticker selected'], 400);
         }
 
-        // Cargar sticker
+        // Cargar pegatina
         $stickerFullPath = '../public/' . $stickerPath;
         if (!file_exists($stickerFullPath)) {
             $this->json(['success' => false, 'message' => 'Sticker not found'], 404);
@@ -678,7 +678,7 @@ class EditorController extends Controller {
             $this->json(['success' => false, 'message' => 'Failed to load sticker'], 500);
         }
 
-        // Redimensionar sticker según el tamaño especificado
+        // Redimensionar pegatina segun tamaño especificado
         $originalWidth = imagesx($sticker);
         $originalHeight = imagesy($sticker);
         $newWidth = intval($originalWidth * ($stickerSize / 100));
@@ -700,7 +700,7 @@ class EditorController extends Controller {
         imagedestroy($sticker);
         $sticker = $resizedSticker;
 
-        // Procesar cada frame y aplicar sticker
+        // Procesar cada frame y aplicar pegatina
         $processedFrames = [];
         $tempFiles = [];
         
@@ -720,7 +720,7 @@ class EditorController extends Controller {
                 continue;
             }
 
-            // Aplicar sticker al frame
+            // Aplicar pegatina al frame
             $finalFrame = imagecreatetruecolor(imagesx($frameImage), imagesy($frameImage));
             imagealphablending($finalFrame, false);
             imagesavealpha($finalFrame, true);
@@ -728,7 +728,7 @@ class EditorController extends Controller {
             // Copiar frame base
             imagecopy($finalFrame, $frameImage, 0, 0, 0, 0, imagesx($frameImage), imagesy($frameImage));
             
-            // Aplicar sticker en la posición especificada
+            // Aplicar pegatina al frame
             imagealphablending($finalFrame, true);
             imagecopy($finalFrame, $sticker, $stickerX, $stickerY, 0, 0, imagesx($sticker), imagesy($sticker));
             
@@ -757,10 +757,10 @@ class EditorController extends Controller {
         $gifPath = '../public/uploads/images/' . $gifFilename;
 
         // Usar ImageMagick o GD para crear el GIF
-        // Nota: PHP GD no soporta nativamente la creación de GIFs animados
-        // Se requiere ImageMagick o una librería externa
+        // Nota: PHP GD no soporta nativamente la creacion de GIFs animados
+        // Se requiere ImageMagick o una libreria externa
         
-        // Opción 1: Usar ImageMagick (si está disponible)
+        // Opcion 1: Usar ImageMagick (si esta disponible)
         if (extension_loaded('imagick')) {
             try {
                 $animation = new Imagick();
@@ -783,7 +783,7 @@ class EditorController extends Controller {
                 $error = $e->getMessage();
             }
         } 
-        // Opción 2: Usar comando del sistema (convert de ImageMagick)
+        // Opcion 2: Usar comando del sistema (convert de ImageMagick)
         else if (shell_exec('which convert') !== null) {
             $framesList = implode(' ', $processedFrames);
             $command = "convert -delay 10 -loop 0 {$framesList} {$gifPath}";

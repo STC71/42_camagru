@@ -1,8 +1,7 @@
 <?php
 
 /**
- * Validator Class
- * Handles input validation
+ * Reúne validaciones y utilidades de saneamiento reutilizables.
  */
 class Validator {
     
@@ -11,12 +10,12 @@ class Validator {
     }
 
     public static function username($username) {
-        // Username must be 3-20 characters, alphanumeric and underscore only
+        // Entre 3 y 20 caracteres; letras, números y guion bajo.
         return preg_match('/^[a-zA-Z0-9_]{3,20}$/', $username);
     }
 
     public static function password($password) {
-        // Password must be at least 8 characters, contain at least one letter and one number
+        // Mínimo 8 caracteres, con al menos una letra y un número.
         return strlen($password) >= 8 && 
                preg_match('/[a-zA-Z]/', $password) && 
                preg_match('/[0-9]/', $password);
@@ -39,9 +38,8 @@ class Validator {
     }
 
     public static function sanitizeFilename($filename) {
-        // Remove any path information
+        // Elimina rutas y caracteres no permitidos.
         $filename = basename($filename);
-        // Remove any special characters
         $filename = preg_replace('/[^a-zA-Z0-9._-]/', '', $filename);
         return $filename;
     }
@@ -55,6 +53,7 @@ class Validator {
     }
 
     public static function maxFileSize($file, $maxSize = 5242880) { // 5MB default
+        // 5 MB por defecto.
         return filesize($file) <= $maxSize;
     }
 }

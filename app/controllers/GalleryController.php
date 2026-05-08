@@ -2,7 +2,7 @@
 
 /**
  * GalleryController
- * Handles the public gallery with pagination, likes, and comments
+ * Gestiona la galeria publica con paginacion, likes y comentarios
  */
 class GalleryController extends Controller {
 
@@ -64,7 +64,7 @@ class GalleryController extends Controller {
         $totalImages = $imageModel->count();
         $totalPages = ceil($totalImages / $perPage);
 
-        // Get likes and comments for current user
+        // Obtener likes y comentarios del usuario actual
         $userLikes = [];
         if (isset($_SESSION['user_id'])) {
             $likeModel = $this->model('Like');
@@ -75,7 +75,7 @@ class GalleryController extends Controller {
             }
         }
 
-        // Get comments for each image
+        // Obtener comentarios para cada imagen
         $commentModel = $this->model('Comment');
         $imageComments = [];
         foreach ($images as $image) {
@@ -231,7 +231,7 @@ class GalleryController extends Controller {
         $commentId = $commentModel->create($imageId, $_SESSION['user_id'], $comment);
 
         if ($commentId) {
-            // Send notification to image owner
+            // Enviar notificacion al propietario de la imagen
             $imageModel = $this->model('Image');
             $image = $imageModel->findById($imageId);
             
@@ -292,17 +292,17 @@ class GalleryController extends Controller {
  * ```
  */
     public function loadMore() {
-        // Obtener parámetros de paginación
+        // Obtener parametros de paginacion
         $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
         $perPage = 5;
         $offset = ($page - 1) * $perPage;
 
-        // Obtener imágenes
+        // Obtener imagenes
         $imageModel = $this->model('Image');
         $images = $imageModel->getAll($perPage, $offset);
         $totalImages = $imageModel->count();
         
-        // Calcular si hay más páginas
+        // Calcular si hay mas paginas
         $hasMore = ($offset + count($images)) < $totalImages;
 
         // Obtener likes del usuario actual

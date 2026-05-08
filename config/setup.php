@@ -1,6 +1,6 @@
 <?php
 /**
- * Database Setup Script
+ * Script de Configuracion de Base de Datos
  * Required by 42 Subject
  * Can be run via CLI or browser to initialize the database
  */
@@ -8,14 +8,14 @@
 require_once __DIR__ . '/database.php';
 
 try {
-    // Conectamos sin el nombre de la base de datos para poder crearla si no existe
+    // Conectamos sin el nombre de la BD para poder crearla si no existe
     $dsn_no_db = 'mysql:host=' . Config::get('DB_HOST', 'localhost') . ';port=' . Config::get('DB_PORT', '3306') . ';charset=utf8mb4';
     
     $pdo = new PDO($dsn_no_db, $DB_USER, $DB_PASSWORD, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ]);
     
-    // Leemos el script inicial de la base de datos
+    // Leemos el script inicial de la BD
     $sql_file = __DIR__ . '/../database/init.sql';
     
     if (!file_exists($sql_file)) {

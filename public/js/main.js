@@ -1,8 +1,8 @@
-// Main JavaScript file for Camagru
-// Handles common functionality across all pages
+// Archivo JavaScript principal de Camagru
+// Gestiona funcionalidad comun en todas las paginas
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-hide flash messages after 5 seconds
+    // Ocultar automaticamente mensajes flash tras 5 segundos
     const flashMessages = document.querySelectorAll('.flash');
     flashMessages.forEach(flash => {
         setTimeout(() => {
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     });
 
-    // Confirm before deleting
+    // Confirmar antes de eliminar
     const deleteButtons = document.querySelectorAll('[data-confirm]');
     deleteButtons.forEach(button => {
         button.addEventListener('click', function(e) {
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Form validation helper
+    // Ayudante de validacion de formulario
     window.validateForm = function(formId) {
         const form = document.getElementById(formId);
         const inputs = form.querySelectorAll('input[required]');
@@ -40,12 +40,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return isValid;
     };
 
-    // Password strength indicator
+    // Indicador de fortaleza de contrasena
     const passwordInputs = document.querySelectorAll('input[type="password"]');
     passwordInputs.forEach(input => {
         input.addEventListener('input', function() {
             const strength = getPasswordStrength(this.value);
-            // You can add visual feedback here
+            // Puedes agregar feedback visual aqui
         });
     });
 });

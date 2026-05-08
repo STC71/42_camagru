@@ -1,7 +1,7 @@
 /**
  * Editor JavaScript - Vista previa en vivo y GIF animado
- * BONUS 2: Live preview con drag & drop de stickers
- * BONUS 5: Generación de GIF animados
+ * BONUS 2: Vista previa en vivo con drag & drop de pegatinas
+ * BONUS 5: Generacion de GIF animados
  */
 
 // Estado del editor
@@ -19,7 +19,7 @@ const EditorState = {
     gifInterval: null
 };
 
-// Inicialización
+// Inicializacion
 document.addEventListener('DOMContentLoaded', function() {
     initializeWebcam();
     initializeStickerSelection();
@@ -48,7 +48,7 @@ async function initializeWebcam() {
         EditorState.videoElement.srcObject = EditorState.stream;
         EditorState.videoElement.play();
         
-        // Iniciar preview en tiempo real cuando el video esté listo
+        // Iniciar preview en tiempo real cuando el video este listo
         EditorState.videoElement.addEventListener('loadedmetadata', () => {
             startLivePreview();
         });
@@ -58,7 +58,7 @@ async function initializeWebcam() {
         console.error('Error al acceder a la webcam:', error);
         showNotification('No se pudo acceder a la webcam. Por favor, permite el acceso o usa la opción de subir archivo.', 'error');
         
-        // Mostrar opción de subida de archivo
+        // Mostrar opcion de subida de archivo
         document.querySelector('.upload-section').style.display = 'block';
     }
 }
@@ -81,7 +81,7 @@ function startLivePreview() {
                 EditorState.previewCanvas.height
             );
             
-            // Dibujar sticker si está seleccionado
+            // Dibujar pegatina si esta seleccionada
             if (EditorState.selectedSticker) {
                 drawStickerOnCanvas(ctx, EditorState.previewCanvas.width, EditorState.previewCanvas.height);
             }
@@ -140,7 +140,7 @@ function startDrag(e) {
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     
-    // Verificar si el click está sobre el sticker
+    // Verificar si el click esta sobre la pegatina
     const stickerX = EditorState.stickerPosition.x;
     const stickerY = EditorState.stickerPosition.y;
     const stickerWidth = (EditorState.stickerSize / EditorState.previewCanvas.width) * 100;
@@ -189,14 +189,14 @@ function initializeStickerSelection() {
     
     stickerItems.forEach(item => {
         item.addEventListener('click', function() {
-            // Remover selección anterior
+            // Remover seleccion anterior
             document.querySelectorAll('.sticker-item').forEach(s => s.classList.remove('selected'));
             
-            // Seleccionar nuevo sticker
+            // Seleccionar nueva pegatina
             this.classList.add('selected');
             EditorState.selectedSticker = this.dataset.sticker;
             
-            // Habilitar botón de captura
+            // Habilitar boton de captura
             const captureBtn = document.getElementById('capture-btn');
             if (captureBtn) {
                 captureBtn.disabled = false;
@@ -211,7 +211,7 @@ function initializeStickerSelection() {
         });
     });
     
-    // Control de tamaño del sticker
+    // Control de tamaño de la pegatina
     const sizeSlider = document.getElementById('sticker-size');
     if (sizeSlider) {
         sizeSlider.addEventListener('input', function() {
