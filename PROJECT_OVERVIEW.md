@@ -175,7 +175,7 @@ camagru/
 ├── 📄 apache.conf              # Configuración del VirtualHost
 └── 📄 docker-entrypoint.sh     # Script de inicialización Docker
 │
-├── 📄 .env.example             # Template de config
+├── 📄 env.example              # Template de config
 ├── 📄 .gitignore               # Archivos ignorados
 │
 └── 📄 Documentación
@@ -293,11 +293,13 @@ Características:
 
 ```bash
 # 1. Clonar repo
-git clone <repo-url> camagru && cd camagru
+https://github.com/STC71/42_camagru.git && cd 42_camagru
 
 # 2. Configurar
-cp .env.example .env
+cp env.example .env
 nano .env  # Editar credenciales
+# O utiliza env_setup.sh
+./env_setup.sh
 
 # 3. Iniciar Docker
 docker-compose up --build -d
@@ -410,4 +412,4 @@ Código:
 
 ---
 
-*Última actualización: Enero 2026*
+*Última actualización: Agosto 2026*

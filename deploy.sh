@@ -61,8 +61,8 @@ setup_environment() {
     print_header "Setting Up Environment"
     
     if [ ! -f .env ]; then
-        print_warning ".env file not found. Creating from .env.example..."
-        cp .env.example .env
+        print_warning ".env file not found. Creating from env.example..."
+        cp env.example .env
         print_success ".env file created"
         print_warning "Please edit .env with your settings before continuing"
         echo ""

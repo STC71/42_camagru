@@ -1,6 +1,6 @@
 # 📸 Camagru - Plataforma de Compartición de Fotos
 
-**Proyecto de 42 School** - Una aplicación web similar a Instagram que permite a los usuarios capturar, editar y compartir fotos con stickers y filtros.
+**Proyecto implementado en 42 Málaga** - Una aplicación web similar a Instagram que permite a los usuarios capturar, editar y compartir fotos con stickers y filtros.
 
 ![Camagru Banner](https://img.shields.io/badge/42-Camagru-00babc?style=for-the-badge&logo=42)
 ![PHP Version](https://img.shields.io/badge/PHP-8.2-777BB4?style=flat-square&logo=php)
@@ -237,12 +237,14 @@ O para instalación manual:
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/tuusuario/camagru.git
-cd camagru
+git clone https://github.com/STC71/42_camagru.git
+cd 42_camagru
 
 # 2. Configurar variables de entorno
-cp .env.example .env
+cp env.example .env
 # Editar .env con tus credenciales
+# O utiliza env_setup.sh
+./env_setup.sh
 
 # 3. Construir e iniciar con Docker
 docker-compose up --build -d
@@ -277,8 +279,10 @@ sudo chown -R www-data:www-data public/uploads
 sudo chmod -R 755 public/uploads
 
 # 5. Configurar .env
-cp .env.example .env
+cp env.example .env
 # Editar credenciales de BD y SMTP
+# O utiliza env_setup.sh
+./env_setup.sh
 ```
 </details>
 
@@ -295,7 +299,7 @@ camagru/
 ├── 📄 COMPLIANCE.md                # Checklist del subject
 ├── 📄 SUMMARY.md                   # Resumen técnico
 ├── 📄 PROJECT_OVERVIEW.md          # Vista general
-├── 📄 .env.example                 # Template de configuración
+├── 📄 env.example                  # Template de configuración
 ├── 📄 .gitignore                   # Archivos ignorados por Git
 │
 ├── 📁 app/                         # Aplicación principal
