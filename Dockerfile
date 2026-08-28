@@ -1,24 +1,32 @@
-FROM php:8.2-apache
+FROM php:8.2-apache-bookworm
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y --fix-missing \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    libzip-dev \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        git \
+        curl \
+        libpng-dev \
+        libonig-dev \
+        libxml2-dev \
+        zip \
+        unzip \
+        libzip-dev \
     && docker-php-ext-configure gd \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
-
-# Enable Apache modules
-RUN a2enmod rewrite headers
-
-# Cambiar UID de www-data para que coincida con el usuario del host
-# Esto permite a Apache leer archivos montados desde /sgoinfre
-RUN usermod -u 104765 www-data && groupmod -g 104765 www-data
+    && docker-php-ext-install \
+        pdo_mysql \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd \
+        zip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+    
+# Enable Apache modules and set a global server name
+RUN a2enmod rewrite headers \
+    && printf 'ServerName localhost\n' > /etc/apache2/conf-available/servername.conf \
+    && a2enconf servername
 
 # Set working directory
 WORKDIR /var/www/html
