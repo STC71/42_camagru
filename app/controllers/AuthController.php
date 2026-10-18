@@ -1,58 +1,36 @@
-<?php   
-// Este tag de apertura es necesario para que el código PHP funcione correctamente. 
-// Asegúrate de que no haya espacios o líneas en blanco antes de este tag para 
-// evitar errores de encabezado.
+<?php
 
 /**
- * AuthController
- * Gestiona autenticacion: login, registro, logout, verificacion, restablecimiento de contrasena
+ * =============================================================================
+ * AuthController.php
+ * =============================================================================
+ * Este controlador se encarga de TODO lo relacionado con la identidad del usuario:
+ * - Registro de nuevas cuentas
+ * - Verificación del correo electrónico
+ * - Inicio y cierre de sesión
+ * - Recuperación de contraseña
+ *
+ * Analogía cotidiana:
+ * Es como el departamento de recepción y seguridad de un edificio.
+ * Decide quién puede entrar, comprueba el carnet, da llaves temporales
+ * cuando alguien pierde las suyas, etc.
+ * =============================================================================
  */
 class AuthController extends Controller {
 
     /**
-
-     * Método login.
-
-     * @return mixed
-
+     * -------------------------------------------------------------------------
+     * Página de inicio de sesión (Login)
+     * -------------------------------------------------------------------------
+     * Si el usuario envía el formulario (POST), intentamos autenticarlo.
+     * Si solo visita la página (GET), le mostramos el formulario.
      */
-/**
- * Gestiona la autenticación/registro de usuarios.
- *
- * Descripción detallada:
- * Este método `login` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->login();
- * ```
- */
-
-/**
- * Gestiona la autenticación/registro de usuarios.
- *
- * Descripción detallada:
- * Este método `login` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->login();
- * ```
- */
     public function login() {
+        // Solo pueden ver esta página los usuarios que NO están logueados
         $this->requireGuest();
 
         if ($this->isPost()) {
+            // Protección CSRF: comprobamos que la petición viene de nuestro formulario
             if (!$this->validateCSRF()) {
                 $_SESSION['flash_error'] = 'Invalid request. Please try again.';
                 $this->redirect('login');
@@ -62,20 +40,24 @@ class AuthController extends Controller {
             $password = $_POST['password'] ?? '';
 
             $userModel = $this->model('User');
-            $user = $userModel->findByUsername($username);
 
+            // Permitimos login tanto con username como con email
+            $user = $userModel->findByUsername($username);
             if (!$user) {
                 $user = $userModel->findByEmail($username);
             }
 
+            // Verificamos la contraseña
             if ($user && $userModel->verifyPassword($password, $user['password'])) {
+                // El usuario debe haber confirmado su email antes de poder entrar
                 if (!$user['verified']) {
                     $_SESSION['flash_error'] = 'Please verify your email before logging in.';
                     $this->redirect('login');
                 }
 
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['username'] = $user['username'];
+                // ¡Login correcto! Guardamos los datos en la sesión
+                $_SESSION['user_id']   = $user['id'];
+                $_SESSION['username']  = $user['username'];
                 $_SESSION['flash_success'] = 'Welcome back, ' . $user['username'] . '!';
                 $this->redirect('home');
             } else {
@@ -84,51 +66,19 @@ class AuthController extends Controller {
             }
         }
 
+        // Si llegamos aquí es porque es un GET → mostramos el formulario
         $this->view('auth/login', [
             'csrf_token' => $this->generateCSRF()
         ]);
     }
 
     /**
-
-     * Método register.
-
-     * @return mixed
-
+     * -------------------------------------------------------------------------
+     * Página de registro de nuevos usuarios
+     * -------------------------------------------------------------------------
+     * Validamos todos los datos, creamos el usuario y le enviamos un email
+     * de verificación.
      */
-/**
- * Gestiona la autenticación/registro de usuarios.
- *
- * Descripción detallada:
- * Este método `register` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->register();
- * ```
- */
-
-/**
- * Gestiona la autenticación/registro de usuarios.
- *
- * Descripción detallada:
- * Este método `register` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->register();
- * ```
- */
     public function register() {
         $this->requireGuest();
 
@@ -138,14 +88,14 @@ class AuthController extends Controller {
                 $this->redirect('register');
             }
 
-            $username = $this->sanitize($_POST['username'] ?? '');
-            $email = $this->sanitize($_POST['email'] ?? '');
-            $password = $_POST['password'] ?? '';
+            $username        = $this->sanitize($_POST['username'] ?? '');
+            $email           = $this->sanitize($_POST['email'] ?? '');
+            $password        = $_POST['password'] ?? '';
             $confirmPassword = $_POST['confirm_password'] ?? '';
 
             $errors = [];
 
-            // Validación
+            // ---------- Validaciones ----------
             if (!Validator::required($username)) {
                 $errors[] = 'Username is required.';
             } elseif (!Validator::username($username)) {
@@ -161,6 +111,7 @@ class AuthController extends Controller {
             if (!Validator::required($password)) {
                 $errors[] = 'Password is required.';
             } elseif (!Validator::password($password)) {
+                // La contraseña debe tener mínimo 8 caracteres + letras + números
                 $errors[] = 'Password must be at least 8 characters with letters and numbers.';
             }
 
@@ -170,17 +121,20 @@ class AuthController extends Controller {
 
             $userModel = $this->model('User');
 
+            // Comprobamos que el username y el email no existan ya
             if ($userModel->usernameExists($username)) {
                 $errors[] = 'Username already exists.';
             }
-
             if ($userModel->emailExists($email)) {
                 $errors[] = 'Email already registered.';
             }
 
+            // Si no hay errores, creamos el usuario
             if (empty($errors)) {
                 $token = $userModel->create($username, $email, $password);
+
                 if ($token) {
+                    // Enviamos el email de verificación
                     Mailer::sendVerificationEmail($email, $username, $token);
                     $_SESSION['flash_success'] = 'Registration successful! Please check your email to verify your account.';
                     $this->redirect('login');
@@ -189,60 +143,30 @@ class AuthController extends Controller {
                 }
             }
 
+            // Si llegamos aquí hubo errores → los guardamos y volvemos al formulario
             $_SESSION['flash_error'] = implode('<br>', $errors);
-            $_SESSION['form_data'] = $_POST;
+            $_SESSION['form_data'] = $_POST; // Para no perder lo que el usuario ya escribió
             $this->redirect('register');
         }
 
+        // Recuperamos los datos del formulario si los había
         $formData = $_SESSION['form_data'] ?? [];
         unset($_SESSION['form_data']);
 
         $this->view('auth/register', [
             'csrf_token' => $this->generateCSRF(),
-            'form_data' => $formData
+            'form_data'  => $formData
         ]);
     }
 
     /**
-
-     * Método verify.
-
-     * @return mixed
-
+     * -------------------------------------------------------------------------
+     * Verificación de la cuenta por email
+     * -------------------------------------------------------------------------
+     * El usuario hace clic en el enlace que recibió por correo.
+     * El enlace contiene un token único. Si el token es válido,
+     * marcamos la cuenta como verificada.
      */
-/**
- * Método `verify` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `verify` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->verify();
- * ```
- */
-
-/**
- * Método `verify` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `verify` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->verify();
- * ```
- */
     public function verify() {
         $token = $_GET['token'] ?? '';
 
@@ -269,45 +193,15 @@ class AuthController extends Controller {
     }
 
     /**
-
-     * Método forgotPassword.
-
-     * @return mixed
-
+     * -------------------------------------------------------------------------
+     * Solicitud de recuperación de contraseña ("He olvidado mi contraseña")
+     * -------------------------------------------------------------------------
+     * El usuario introduce su email. Si existe, le enviamos un enlace
+     * temporal para que pueda cambiar la contraseña.
+     *
+     * Nota de seguridad: siempre mostramos el mismo mensaje de éxito,
+     * aunque el email no exista. Así no revelamos qué correos están registrados.
      */
-/**
- * Método `forgotPassword` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `forgotPassword` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->forgotPassword();
- * ```
- */
-
-/**
- * Método `forgotPassword` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `forgotPassword` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->forgotPassword();
- * ```
- */
     public function forgotPassword() {
         $this->requireGuest();
 
@@ -327,6 +221,7 @@ class AuthController extends Controller {
             $userModel = $this->model('User');
             $user = $userModel->findByEmail($email);
 
+            // Solo enviamos el correo si el usuario realmente existe
             if ($user) {
                 $token = $userModel->createResetToken($email);
                 if ($token) {
@@ -334,7 +229,7 @@ class AuthController extends Controller {
                 }
             }
 
-            // Siempre mostrar exito para evitar enumeracion de correos
+            // Mensaje genérico (no revelamos si el email existe o no)
             $_SESSION['flash_success'] = 'If that email exists, a password reset link has been sent.';
             $this->redirect('login');
         }
@@ -345,45 +240,12 @@ class AuthController extends Controller {
     }
 
     /**
-
-     * Método resetPassword.
-
-     * @return mixed
-
+     * -------------------------------------------------------------------------
+     * Formulario para establecer la nueva contraseña
+     * -------------------------------------------------------------------------
+     * El usuario llega aquí desde el enlace del email.
+     * Comprobamos que el token sea válido y no haya expirado.
      */
-/**
- * Método `resetPassword` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `resetPassword` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->resetPassword();
- * ```
- */
-
-/**
- * Método `resetPassword` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `resetPassword` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->resetPassword();
- * ```
- */
     public function resetPassword() {
         $token = $_GET['token'] ?? '';
 
@@ -400,13 +262,14 @@ class AuthController extends Controller {
             $this->redirect('login');
         }
 
+        // Si el usuario envía el formulario con la nueva contraseña
         if ($this->isPost()) {
             if (!$this->validateCSRF()) {
                 $_SESSION['flash_error'] = 'Invalid request. Please try again.';
                 $this->redirect('reset-password?token=' . $token);
             }
 
-            $password = $_POST['password'] ?? '';
+            $password        = $_POST['password'] ?? '';
             $confirmPassword = $_POST['confirm_password'] ?? '';
 
             $errors = [];
@@ -433,52 +296,19 @@ class AuthController extends Controller {
             $this->redirect('reset-password?token=' . $token);
         }
 
+        // Mostramos el formulario
         $this->view('auth/reset-password', [
             'csrf_token' => $this->generateCSRF(),
-            'token' => $token
+            'token'      => $token
         ]);
     }
 
     /**
-
-     * Método logout.
-
-     * @return mixed
-
+     * -------------------------------------------------------------------------
+     * Cierre de sesión (Logout)
+     * -------------------------------------------------------------------------
+     * Destruye la sesión actual y redirige al inicio.
      */
-/**
- * Gestiona la autenticación/registro de usuarios.
- *
- * Descripción detallada:
- * Este método `logout` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->logout();
- * ```
- */
-
-/**
- * Gestiona la autenticación/registro de usuarios.
- *
- * Descripción detallada:
- * Este método `logout` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->logout();
- * ```
- */
     public function logout() {
         session_destroy();
         header('Location: ' . $this->url('home'));

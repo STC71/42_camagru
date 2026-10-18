@@ -1,38 +1,62 @@
 <?php
 
 /**
- * Modelo de usuarios
- * Gestiona las operaciones de base de datos de usuarios
+ * =============================================================================
+ * User.php - Modelo de Usuarios
+ * =============================================================================
+ * Este modelo se encarga de todas las operaciones relacionadas con los usuarios
+ * en la base de datos: crear cuentas, buscar usuarios, verificar emails,
+ * restablecer contraseñas, etc.
+ *
+ * Analogía cotidiana:
+ * Es como el archivo de personal de una empresa. Aquí se guardan y se consultan
+ * todos los datos de los empleados (usuarios).
+ * =============================================================================
  */
 class User {
+
+    /** Conexión a la base de datos (Singleton) */
     private $db;
 
     /**
-     * Inicializa el modelo con el singleton de Database.
+     * Al crear el modelo, obtenemos la conexión única a la base de datos
      */
     public function __construct() {
         $this->db = Database::getInstance();
     }
 
     /**
-     * Crea una nueva cuenta de usuario con nombre, correo y contrasena hasheada.
-     * Devuelve el token de verificacion para confirmar el correo.
+     * -------------------------------------------------------------------------
+     * Crea un nuevo usuario
+     * -------------------------------------------------------------------------
+     * - Hashea la contraseña (nunca se guarda en texto plano)
+     * - Genera un token único de verificación de email
+     * - Devuelve el token para poder enviarlo por correo
+     *
+     * @return string|false  Token de verificación o false si falla
      */
     public function create($username, $email, $password) {
+        // password_hash usa el algoritmo más seguro disponible (actualmente bcrypt)
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+        // Token aleatorio de 64 caracteres hexadecimales
         $verificationToken = bin2hex(random_bytes(32));
 
-        $sql = "INSERT INTO users (username, email, password, verification_token) VALUES (?, ?, ?, ?)";
-        $result = $this->db->query($sql, [$username, $email, $hashedPassword, $verificationToken]);
+        $sql = "INSERT INTO users (username, email, password, verification_token) 
+                VALUES (?, ?, ?, ?)";
 
-        if ($result) {
-            return $verificationToken;
-        }
-        return false;
+        $result = $this->db->query($sql, [
+            $username,
+            $email,
+            $hashedPassword,
+            $verificationToken
+        ]);
+
+        return $result ? $verificationToken : false;
     }
 
     /**
-     * Busca un usuario por su direccion de correo.
+     * Busca un usuario por su dirección de correo electrónico
      */
     public function findByEmail($email) {
         $sql = "SELECT * FROM users WHERE email = ?";
@@ -41,7 +65,7 @@ class User {
     }
 
     /**
-     * Busca un usuario por nombre de usuario.
+     * Busca un usuario por su nombre de usuario
      */
     public function findByUsername($username) {
         $sql = "SELECT * FROM users WHERE username = ?";
@@ -50,7 +74,7 @@ class User {
     }
 
     /**
-     * Busca un usuario por su ID.
+     * Busca un usuario por su ID
      */
     public function findById($id) {
         $sql = "SELECT * FROM users WHERE id = ?";
@@ -59,7 +83,7 @@ class User {
     }
 
     /**
-     * Busca un usuario por su token de verificacion de correo.
+     * Busca un usuario por su token de verificación de email
      */
     public function findByVerificationToken($token) {
         $sql = "SELECT * FROM users WHERE verification_token = ?";
@@ -68,49 +92,64 @@ class User {
     }
 
     /**
-     * Busca un usuario por su token de restablecimiento de contrasena (no expirado).
+     * Busca un usuario por su token de restablecimiento de contraseña
+     * (solo si el token todavía no ha expirado)
      */
     public function findByResetToken($token) {
-        $sql = "SELECT * FROM users WHERE reset_token = ? AND reset_token_expiry > NOW()";
+        $sql = "SELECT * FROM users 
+                WHERE reset_token = ? 
+                AND reset_token_expiry > NOW()";
         $stmt = $this->db->query($sql, [$token]);
         return $stmt ? $stmt->fetch() : false;
     }
 
     /**
-     * Marca una cuenta como verificada y limpia su token de verificacion.
+     * Marca la cuenta como verificada y elimina el token de verificación
      */
     public function verify($token) {
-        $sql = "UPDATE users SET verified = 1, verification_token = NULL WHERE verification_token = ?";
+        $sql = "UPDATE users 
+                SET verified = 1, verification_token = NULL 
+                WHERE verification_token = ?";
         return $this->db->query($sql, [$token]) !== false;
     }
 
     /**
-     * Crea un token de restablecimiento y fija su expiracion a una hora desde ahora.
-     * Devuelve el token en caso de exito o false si falla.
+     * Genera un token de restablecimiento de contraseña
+     * El token tiene una validez de 1 hora
+     *
+     * @return string|false  Token generado o false si falla
      */
     public function createResetToken($email) {
-        $token = bin2hex(random_bytes(32));
+        $token  = bin2hex(random_bytes(32));
         $expiry = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
-        $sql = "UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE email = ?";
-        $result = $this->db->query($sql, [$token, $expiry, $email]);
+        $sql = "UPDATE users 
+                SET reset_token = ?, reset_token_expiry = ? 
+                WHERE email = ?";
 
+        $result = $this->db->query($sql, [$token, $expiry, $email]);
         return $result ? $token : false;
     }
 
     /**
-     * Restablece la contrasena de un usuario usando su token de reseteo.
-     * El token se limpia tras un reseteo correcto.
+     * Cambia la contraseña usando el token de restablecimiento
+     * Después de usarlo, el token se elimina
      */
     public function resetPassword($token, $newPassword) {
         $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-        $sql = "UPDATE users SET password = ?, reset_token = NULL, reset_token_expiry = NULL 
-                WHERE reset_token = ? AND reset_token_expiry > NOW()";
+
+        $sql = "UPDATE users 
+                SET password = ?, 
+                    reset_token = NULL, 
+                    reset_token_expiry = NULL 
+                WHERE reset_token = ? 
+                AND reset_token_expiry > NOW()";
+
         return $this->db->query($sql, [$hashedPassword, $token]) !== false;
     }
 
     /**
-     * Actualiza el nombre de usuario y correo de un usuario.
+     * Actualiza el nombre de usuario y el email de un usuario
      */
     public function updateProfile($userId, $username, $email) {
         $sql = "UPDATE users SET username = ?, email = ? WHERE id = ?";
@@ -118,7 +157,7 @@ class User {
     }
 
     /**
-     * Cambia la contrasena de un usuario por ID.
+     * Cambia la contraseña de un usuario (desde el perfil)
      */
     public function updatePassword($userId, $newPassword) {
         $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
@@ -127,7 +166,7 @@ class User {
     }
 
     /**
-     * Actualiza las preferencias de notificacion de comentarios de un usuario.
+     * Activa o desactiva las notificaciones por email de comentarios
      */
     public function updateNotificationSettings($userId, $notifyComments) {
         $sql = "UPDATE users SET notify_comments = ? WHERE id = ?";
@@ -135,15 +174,15 @@ class User {
     }
 
     /**
-     * Verifica una contrasena en texto plano contra un hash almacenado.
+     * Comprueba si una contraseña en texto plano coincide con el hash guardado
      */
     public function verifyPassword($password, $hash) {
         return password_verify($password, $hash);
     }
 
     /**
-     * Comprueba si un correo ya existe en la base de datos.
-     * Opcionalmente excluye un ID de usuario concreto de la comprobacion.
+     * Comprueba si un email ya está registrado
+     * (opcionalmente excluye a un usuario concreto, útil al editar el perfil)
      */
     public function emailExists($email, $excludeUserId = null) {
         if ($excludeUserId) {
@@ -157,8 +196,8 @@ class User {
     }
 
     /**
-     * Comprueba si un nombre de usuario ya existe en la base de datos.
-     * Opcionalmente excluye un ID de usuario concreto de la comprobacion.
+     * Comprueba si un nombre de usuario ya está en uso
+     * (opcionalmente excluye a un usuario concreto)
      */
     public function usernameExists($username, $excludeUserId = null) {
         if ($excludeUserId) {

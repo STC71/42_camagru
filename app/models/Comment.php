@@ -1,26 +1,48 @@
 <?php
 
 /**
- * Modelo de comentarios
- * Gestiona las operaciones de base de datos de comentarios
+ * =============================================================================
+ * Comment.php - Modelo de Comentarios
+ * =============================================================================
+ * Gestiona los comentarios que los usuarios escriben en las fotos.
+ *
+ * Características:
+ * - Cualquier usuario logueado puede comentar
+ * - Se puede obtener la lista de comentarios de una foto
+ * - Se notifica por email al autor de la foto (si tiene las notificaciones activadas)
+ *
+ * Analogía cotidiana:
+ * Es como el libro de visitas de una exposición de fotografías.
+ * =============================================================================
  */
 class Comment {
+
     private $db;
 
-    /**
-     * Inicializa el modelo con el singleton de Database.
-     */
     public function __construct() {
         $this->db = Database::getInstance();
     }
 
     /**
-     * Crea un nuevo comentario en una imagen y devuelve el ID del comentario.
+     * -------------------------------------------------------------------------
+     * Añade un nuevo comentario a una imagen
+     * -------------------------------------------------------------------------
+     * @param int    $imageId  ID de la foto
+     * @param int    $userId   ID del usuario que comenta
+     * @param string $content  Texto del comentario
+     * @return int|false       ID del comentario creado o false si falla
      */
-    public function create($imageId, $userId, $comment) {
-        $sql = "INSERT INTO comments (image_id, user_id, comment) VALUES (?, ?, ?)";
-        $result = $this->db->query($sql, [$imageId, $userId, $comment]);
-        
+    public function create($imageId, $userId, $content) {
+        // Limitamos la longitud por seguridad
+        $content = mb_substr(trim($content), 0, 500);
+
+        if (empty($content)) {
+            return false;
+        }
+
+        $sql = "INSERT INTO comments (image_id, user_id, content) VALUES (?, ?, ?)";
+        $result = $this->db->query($sql, [$imageId, $userId, $content]);
+
         if ($result) {
             return $this->db->lastInsertId();
         }
@@ -28,40 +50,37 @@ class Comment {
     }
 
     /**
-     * Busca todos los comentarios de una imagen con informacion de usuario.
-     * Admite paginacion mediante limit y offset.
+     * Devuelve todos los comentarios de una imagen
+     * (ordenados del más reciente al más antiguo)
+     * Incluye el nombre de usuario del autor del comentario
      */
-    public function findByImageId($imageId, $limit = null, $offset = 0) {
+    public function findByImageId($imageId) {
         $sql = "SELECT c.*, u.username 
-                FROM comments c 
-                JOIN users u ON c.user_id = u.id 
-                WHERE c.image_id = ? 
+                FROM comments c
+                JOIN users u ON c.user_id = u.id
+                WHERE c.image_id = ?
                 ORDER BY c.created_at DESC";
-        
-        if ($limit) {
-            $sql .= " LIMIT $limit OFFSET $offset";
-        }
-        
+
         $stmt = $this->db->query($sql, [$imageId]);
         return $stmt ? $stmt->fetchAll() : [];
     }
 
     /**
-     * Cuenta el numero total de comentarios de una imagen.
+     * Cuenta cuántos comentarios tiene una imagen
      */
-    public function count($imageId) {
-        $sql = "SELECT COUNT(*) as total FROM comments WHERE image_id = ?";
+    public function countByImage($imageId) {
+        $sql = "SELECT COUNT(*) AS total FROM comments WHERE image_id = ?";
         $stmt = $this->db->query($sql, [$imageId]);
-        $result = $stmt ? $stmt->fetch() : false;
-        return $result ? $result['total'] : 0;
+        $row = $stmt ? $stmt->fetch() : null;
+        return $row ? (int)$row['total'] : 0;
     }
 
     /**
-     * Elimina un comentario si el usuario solicitante es su propietario.
+     * Elimina un comentario (solo el autor del comentario o el dueño de la foto)
+     * Nota: esta funcionalidad es opcional según el subject
      */
-    public function delete($id, $userId) {
-        // Verificar propiedad
+    public function delete($commentId, $userId) {
         $sql = "DELETE FROM comments WHERE id = ? AND user_id = ?";
-        return $this->db->query($sql, [$id, $userId]) !== false;
+        return $this->db->query($sql, [$commentId, $userId]) !== false;
     }
 }

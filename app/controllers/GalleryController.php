@@ -1,145 +1,78 @@
 <?php
 
 /**
- * GalleryController
- * Gestiona la galeria publica con paginacion, likes y comentarios
+ * =============================================================================
+ * GalleryController.php
+ * =============================================================================
+ * Este controlador gestiona la galería pública de la aplicación.
+ *
+ * Responsabilidades principales:
+ * - Mostrar todas las fotos de todos los usuarios (paginadas)
+ * - Permitir dar/quitar likes (solo usuarios logueados)
+ * - Permitir añadir comentarios (solo usuarios logueados)
+ * - Enviar notificación por email al autor cuando recibe un comentario
+ * - Soportar scroll infinito (bonus)
+ *
+ * Analogía cotidiana:
+ * Es como la sala de exposiciones de un museo. Cualquiera puede entrar a ver
+ * las obras, pero solo los socios pueden dejar comentarios o poner "me gusta".
+ * =============================================================================
  */
 class GalleryController extends Controller {
 
     /**
-
-     * Método index.
-
-     * @return mixed
-
+     * -------------------------------------------------------------------------
+     * Página principal de la galería
+     * -------------------------------------------------------------------------
+     * Muestra 5 imágenes por página (requisito del subject).
+     * También prepara la información de likes y comentarios del usuario actual.
      */
-
-    /**
-
-     * Método index.
-
-     * @return mixed
-
-     */
-/**
- * Método principal de visualización/entrada para esta ruta.
- *
- * Descripción detallada:
- * Este método `index` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->index();
- * ```
- */
-
-/**
- * Método principal de visualización/entrada para esta ruta.
- *
- * Descripción detallada:
- * Este método `index` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->index();
- * ```
- */
     public function index() {
-        $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+        // Página actual (por defecto la 1)
+        $page    = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
         $perPage = 5;
-        $offset = ($page - 1) * $perPage;
+        $offset  = ($page - 1) * $perPage;
 
         $imageModel = $this->model('Image');
-        $images = $imageModel->getAll($perPage, $offset);
+        $images     = $imageModel->getAll($perPage, $offset);
         $totalImages = $imageModel->count();
-        $totalPages = ceil($totalImages / $perPage);
+        $totalPages  = ceil($totalImages / $perPage);
 
-        // Obtener likes y comentarios del usuario actual
+        // Si el usuario está logueado, averiguamos qué fotos ya le gustaron
         $userLikes = [];
         if (isset($_SESSION['user_id'])) {
             $likeModel = $this->model('Like');
             foreach ($images as $image) {
-                if ($likeModel->hasLiked($image['id'], $_SESSION['user_id'])) {
+                if ($likeModel->exists($image['id'], $_SESSION['user_id'])) {
                     $userLikes[] = $image['id'];
                 }
             }
         }
 
-        // Obtener comentarios para cada imagen
-        $commentModel = $this->model('Comment');
+        // Cargamos los comentarios más recientes de cada imagen
+        $commentModel  = $this->model('Comment');
         $imageComments = [];
         foreach ($images as $image) {
-            $imageComments[$image['id']] = $commentModel->findByImageId($image['id'], 3);
+            $imageComments[$image['id']] = $commentModel->findByImageId($image['id']);
         }
 
         $this->view('gallery/index', [
-            'images' => $images,
-            'page' => $page,
-            'totalPages' => $totalPages,
-            'userLikes' => $userLikes,
-            'comments' => $imageComments,
-            'csrf_token' => $this->generateCSRF()
+            'images'      => $images,
+            'page'        => $page,
+            'totalPages'  => $totalPages,
+            'userLikes'   => $userLikes,
+            'comments'    => $imageComments,
+            'csrf_token'  => $this->generateCSRF()
         ]);
     }
 
     /**
-
-     * Método like.
-
-     * @return mixed
-
+     * -------------------------------------------------------------------------
+     * Dar o quitar like a una foto (AJAX)
+     * -------------------------------------------------------------------------
+     * Solo usuarios logueados.
+     * Devuelve JSON con el nuevo estado y el contador actualizado.
      */
-
-    /**
-
-     * Método like.
-
-     * @return mixed
-
-     */
-/**
- * Método `like` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `like` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->like();
- * ```
- */
-
-/**
- * Método `like` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `like` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->like();
- * ```
- */
     public function like() {
         $this->requireAuth();
 
@@ -147,68 +80,28 @@ class GalleryController extends Controller {
             $this->json(['success' => false, 'message' => 'Invalid request'], 400);
         }
 
-        $imageId = intval($_POST['image_id'] ?? 0);
+        $imageId   = intval($_POST['image_id'] ?? 0);
         $likeModel = $this->model('Like');
-        
-        $success = $likeModel->toggle($imageId, $_SESSION['user_id']);
-        $likeCount = $likeModel->count($imageId);
-        $hasLiked = $likeModel->hasLiked($imageId, $_SESSION['user_id']);
+
+        // toggle() añade el like si no existía, o lo quita si ya existía
+        $result = $likeModel->toggle($imageId, $_SESSION['user_id']);
 
         $this->json([
-            'success' => $success,
-            'like_count' => $likeCount,
-            'has_liked' => $hasLiked
+            'success'    => true,
+            'liked'      => $result['liked'],
+            'like_count' => $result['count']
         ]);
     }
 
     /**
-
-     * Método comment.
-
-     * @return mixed
-
+     * -------------------------------------------------------------------------
+     * Añadir un comentario a una foto (AJAX)
+     * -------------------------------------------------------------------------
+     * - Solo usuarios logueados
+     * - Máximo 500 caracteres
+     * - Si el autor de la foto tiene las notificaciones activadas,
+     *   le enviamos un email
      */
-
-    /**
-
-     * Método comment.
-
-     * @return mixed
-
-     */
-/**
- * Método `comment` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `comment` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->comment();
- * ```
- */
-
-/**
- * Método `comment` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `comment` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->comment();
- * ```
- */
     public function comment() {
         $this->requireAuth();
 
@@ -217,135 +110,91 @@ class GalleryController extends Controller {
         }
 
         $imageId = intval($_POST['image_id'] ?? 0);
-        $comment = $this->sanitize($_POST['comment'] ?? '');
+        $content = $this->sanitize($_POST['comment'] ?? '');
 
-        if (!Validator::required($comment)) {
+        if (!Validator::required($content)) {
             $this->json(['success' => false, 'message' => 'Comment cannot be empty'], 400);
         }
 
-        if (!Validator::maxLength($comment, 500)) {
+        if (!Validator::maxLength($content, 500)) {
             $this->json(['success' => false, 'message' => 'Comment too long (max 500 characters)'], 400);
         }
 
         $commentModel = $this->model('Comment');
-        $commentId = $commentModel->create($imageId, $_SESSION['user_id'], $comment);
+        $commentId = $commentModel->create($imageId, $_SESSION['user_id'], $content);
 
-        if ($commentId) {
-            // Enviar notificacion al propietario de la imagen
-            $imageModel = $this->model('Image');
-            $image = $imageModel->findById($imageId);
-            
-            if ($image && $image['user_id'] != $_SESSION['user_id']) {
-                $userModel = $this->model('User');
-                $imageOwner = $userModel->findById($image['user_id']);
-                
-                if ($imageOwner && $imageOwner['notify_comments']) {
-                    Mailer::sendCommentNotification(
-                        $imageOwner['email'],
-                        $imageOwner['username'],
-                        $imageId,
-                        $_SESSION['username']
-                    );
-                }
-            }
-
-            $this->json([
-                'success' => true,
-                'comment' => [
-                    'id' => $commentId,
-                    'username' => $_SESSION['username'],
-                    'comment' => $comment,
-                    'created_at' => date('Y-m-d H:i:s')
-                ]
-            ]);
-        } else {
+        if (!$commentId) {
             $this->json(['success' => false, 'message' => 'Failed to add comment'], 500);
         }
+
+        // ---------- Notificación por email ----------
+        $imageModel = $this->model('Image');
+        $image = $imageModel->findById($imageId);
+
+        // Solo notificamos si:
+        // 1. La imagen existe
+        // 2. El autor no es el mismo que comenta
+        // 3. El autor tiene las notificaciones activadas
+        if ($image && $image['user_id'] != $_SESSION['user_id']) {
+            $userModel  = $this->model('User');
+            $imageOwner = $userModel->findById($image['user_id']);
+
+            if ($imageOwner && !empty($imageOwner['notify_comments'])) {
+                Mailer::sendCommentNotification(
+                    $imageOwner['email'],
+                    $imageOwner['username'],
+                    $imageId,
+                    $_SESSION['username']
+                );
+            }
+        }
+
+        // Devolvemos el comentario recién creado para que el frontend lo muestre
+        $this->json([
+            'success' => true,
+            'comment' => [
+                'id'         => $commentId,
+                'username'   => $_SESSION['username'],
+                'content'    => $content,
+                'created_at' => date('Y-m-d H:i:s')
+            ]
+        ]);
     }
 
     /**
-     * Cargar más imágenes para scroll infinito (BONUS)
-     * Endpoint AJAX que devuelve imágenes en formato JSON
+     * -------------------------------------------------------------------------
+     * Cargar más imágenes (Bonus: Scroll Infinito)
+     * -------------------------------------------------------------------------
+     * Endpoint AJAX que devuelve el siguiente bloque de imágenes en JSON.
+     * Se usa junto con Intersection Observer en el frontend.
      */
-    /**
-     * Método loadMore.
-     * @return mixed
-     */
-    /**
-     * Método loadMore.
-     * @return mixed
-     */
-/**
- * Método `loadMore` del controlador/clase.
- *
- * Descripción detallada:
- * Este método `loadMore` realiza la operación descrita arriba. Se recomienda
- * revisar las validaciones previas y sanitización de los parámetros antes
- * de invocar este método. No modifica el estado global salvo se indique.
- *
- *
- * @return mixed Resultado de la operación (tipo dependiendo del contexto).
- *
- * Ejemplo de uso:
- * ```php
- * $this->loadMore();
- * ```
- */
     public function loadMore() {
-        // Obtener parametros de paginacion
-        $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+        $page    = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
         $perPage = 5;
-        $offset = ($page - 1) * $perPage;
+        $offset  = ($page - 1) * $perPage;
 
-        // Obtener imagenes
-        $imageModel = $this->model('Image');
-        $images = $imageModel->getAll($perPage, $offset);
+        $imageModel  = $this->model('Image');
+        $images      = $imageModel->getAll($perPage, $offset);
         $totalImages = $imageModel->count();
-        
-        // Calcular si hay mas paginas
-        $hasMore = ($offset + count($images)) < $totalImages;
+        $hasMore     = ($offset + $perPage) < $totalImages;
 
-        // Obtener likes del usuario actual
+        // Información de likes del usuario actual (si está logueado)
         $userLikes = [];
         if (isset($_SESSION['user_id'])) {
             $likeModel = $this->model('Like');
             foreach ($images as $image) {
-                if ($likeModel->hasLiked($image['id'], $_SESSION['user_id'])) {
+                if ($likeModel->exists($image['id'], $_SESSION['user_id'])) {
                     $userLikes[] = $image['id'];
                 }
             }
         }
 
-        // Obtener comentarios para cada imagen
-        $commentModel = $this->model('Comment');
-        $commentsData = [];
-        foreach ($images as $image) {
-            $comments = $commentModel->findByImageId($image['id'], 3);
-            $commentsData[$image['id']] = $comments;
-        }
-
-        // Preparar datos para JSON
-        $imagesData = [];
-        foreach ($images as $image) {
-            $imagesData[] = [
-                'id' => $image['id'],
-                'filename' => $image['filename'],
-                'username' => $image['username'],
-                'created_at' => $image['created_at'],
-                'like_count' => $image['like_count'],
-                'comment_count' => $image['comment_count'],
-                'has_liked' => in_array($image['id'], $userLikes),
-                'comments' => $commentsData[$image['id']] ?? []
-            ];
-        }
-
-        // Devolver JSON
         $this->json([
-            'success' => true,
-            'images' => $imagesData,
-            'page' => $page,
-            'hasMore' => $hasMore,
-            'csrf_token' => $this->generateCSRF()
+            'success'   => true,
+            'images'    => $images,
+            'userLikes' => $userLikes,
+            'hasMore'   => $hasMore,
+            'nextPage'  => $page + 1
         ]);
     }
 }
