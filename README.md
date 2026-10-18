@@ -244,4 +244,9 @@ Proyecto educativo realizado en el marco de [42 School](https://www.42network.or
 
 ---
 
-**Hecho con ❤️ en 42 Málaga**
+
+---
+
+<p align="center">
+  <b>Hecho con ❤️ por sternero en 42 Málaga — Octubre 2026</b>
+</p>

@@ -105,4 +105,9 @@ Edita `docker-compose.yml` (sección `ports`) y la variable `APP_URL` en `.env`.
 
 ---
 
-**Campus:** [42 Málaga](https://www.42malaga.com/)
+
+---
+
+<p align="center">
+  <b>Hecho con ❤️ por sternero en 42 Málaga — Octubre 2026</b>
+</p>

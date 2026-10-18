@@ -113,5 +113,9 @@ Documento de cumplimiento respecto al subject oficial y a la hoja de evaluación
 
 ---
 
-**Campus:** [42 Málaga](https://www.42malaga.com/)  
-**Red 42:** [42 Network](https://www.42network.org/)
+
+---
+
+<p align="center">
+  <b>Hecho con ❤️ por sternero en 42 Málaga — Octubre 2026</b>
+</p>
