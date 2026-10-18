@@ -26,7 +26,7 @@ echo -e "${PURPLE}${BOLD}"
 echo "╔════════════════════════════════════════════════════════════════╗"
 echo "║              CONFIGURACIÓN DE ENTORNO CAMAGRU                  ║"
 echo "║                  Asistente de Configuración                    ║"
-echo "║                    Usuario detectado: ${CURRENT_USER}                    ║"
+echo "║                 Usuario detectado:  ${CURRENT_USER}                   ║"
 echo "╚════════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
