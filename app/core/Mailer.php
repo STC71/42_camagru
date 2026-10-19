@@ -59,44 +59,168 @@ class Mailer {
      * (suficiente para Mailtrap y la mayoría de servidores de desarrollo)
      */
     private static function sendSMTP($to, $subject, $body, $headers, $host, $port, $username, $password) {
-        $socket = fsockopen($host, $port, $errno, $errstr, 30);
+        $context = stream_context_create(array(
+            "ssl" => array(
+                "verify_peer" => true,
+                "verify_peer_name" => true,
+                "peer_name" => $host
+            )
+        ));
+
+        $socket = @stream_socket_client(
+            "tcp://" . $host . ":" . (int) $port,
+            $errno,
+            $errstr,
+            30,
+            STREAM_CLIENT_CONNECT,
+            $context
+        );
+
         if (!$socket) {
             error_log("SMTP connection failed: $errstr ($errno)");
             return false;
         }
 
-        $from = Config::get('MAIL_FROM');
+        stream_set_timeout($socket, 30);
 
-        // Conversación básica con el servidor SMTP
-        fgets($socket);
-        fputs($socket, "EHLO " . Config::get('APP_URL') . "\r\n");
-        fgets($socket);
+        try {
+            $readResponse = function () use ($socket) {
+                $response = "";
 
-        // Autenticación
-        fputs($socket, "AUTH LOGIN\r\n");
-        fgets($socket);
-        fputs($socket, base64_encode($username) . "\r\n");
-        fgets($socket);
-        fputs($socket, base64_encode($password) . "\r\n");
-        fgets($socket);
+                while (($line = fgets($socket, 515)) !== false) {
+                    $response .= $line;
 
-        // Envío del mensaje
-        fputs($socket, "MAIL FROM: <$from>\r\n");
-        fgets($socket);
-        fputs($socket, "RCPT TO: <$to>\r\n");
-        fgets($socket);
-        fputs($socket, "DATA\r\n");
-        fgets($socket);
+                    if (preg_match('/^[0-9]{3} /', $line)) {
+                        return array(
+                            "code" => (int) substr($line, 0, 3),
+                            "text" => trim($response)
+                        );
+                    }
+                }
 
-        fputs($socket, "Subject: $subject\r\n");
-        fputs($socket, $headers);
-        fputs($socket, "\r\n$body\r\n.\r\n");
-        fgets($socket);
+                return false;
+            };
 
-        fputs($socket, "QUIT\r\n");
-        fclose($socket);
+            $writeAll = function ($data) use ($socket) {
+                $length = strlen($data);
+                $written = 0;
 
-        return true;
+                while ($written < $length) {
+                    $result = fwrite($socket, substr($data, $written));
+
+                    if ($result === false || $result === 0) {
+                        return false;
+                    }
+
+                    $written += $result;
+                }
+
+                return true;
+            };
+
+            $command = function ($text, $expected) use (
+                $writeAll,
+                $readResponse
+            ) {
+                if (!$writeAll($text . "\r\n")) {
+                    error_log("SMTP: failed to write command.");
+                    return false;
+                }
+
+                $response = $readResponse();
+
+                if ($response === false ||
+                    !in_array($response["code"], (array) $expected, true)) {
+                    $code = $response === false ? "no response" : $response["text"];
+                    error_log("SMTP: unexpected server response: " . $code);
+                    return false;
+                }
+
+                return $response;
+            };
+
+            $greeting = $readResponse();
+
+            if ($greeting === false || $greeting["code"] !== 220) {
+                error_log("SMTP: invalid server greeting.");
+                return false;
+            }
+
+            if ($command("EHLO camagru.local", 250) === false) {
+                return false;
+            }
+
+            if ($command("STARTTLS", 220) === false) {
+                return false;
+            }
+
+            $crypto = @stream_socket_enable_crypto(
+                $socket,
+                true,
+                STREAM_CRYPTO_METHOD_TLS_CLIENT
+            );
+
+            if ($crypto !== true) {
+                error_log("SMTP: TLS negotiation failed.");
+                return false;
+            }
+
+            if ($command("EHLO camagru.local", 250) === false) {
+                return false;
+            }
+
+            if ($command("AUTH LOGIN", 334) === false) {
+                return false;
+            }
+
+            if ($command(base64_encode($username), 334) === false) {
+                return false;
+            }
+
+            if ($command(base64_encode($password), 235) === false) {
+                return false;
+            }
+
+            $from = Config::get("MAIL_FROM");
+
+            if ($command("MAIL FROM: <$from>", 250) === false) {
+                return false;
+            }
+
+            if ($command("RCPT TO: <$to>", array(250, 251)) === false) {
+                return false;
+            }
+
+            if ($command("DATA", 354) === false) {
+                return false;
+            }
+
+            $message = "Subject: $subject\r\n" . $headers . "\r\n" . $body;
+            $message = str_replace(array("\r\n", "\r"), "\n", $message);
+            $message = str_replace("\n", "\r\n", $message);
+            $message = preg_replace('/(?m)^\./', '..', $message);
+            $message = rtrim($message, "\r\n") . "\r\n.\r\n";
+
+            if (!$writeAll($message)) {
+                error_log("SMTP: failed to write message completely.");
+                return false;
+            }
+
+            if ($commandResponse = $readResponse()) {
+                if ($commandResponse["code"] !== 250) {
+                    error_log("SMTP: message rejected: " . $commandResponse["text"]);
+                    return false;
+                }
+            } else {
+                error_log("SMTP: no confirmation after message submission.");
+                return false;
+            }
+
+            $command("QUIT", 221);
+            return true;
+        } finally {
+            fclose($socket);
+        }
     }
 
     /**

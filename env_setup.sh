@@ -97,7 +97,7 @@ echo -e "${YELLOW}Configura los ajustes SMTP para envío de correos${NC}"
 echo -e "${YELLOW}💡 Consejo: Usa Mailtrap.io (https://mailtrap.io) para pruebas${NC}"
 echo ""
 
-MAIL_HOST=$(prompt_with_default "Host SMTP:" "smtp.mailtrap.io")
+MAIL_HOST=$(prompt_with_default "Host SMTP:" "sandbox.smtp.mailtrap.io")
 MAIL_PORT=$(prompt_with_default "Puerto SMTP:" "2525")
 MAIL_USER=$(prompt_with_default "Usuario SMTP:" "your_mailtrap_user")
 MAIL_PASS=$(prompt_with_default "Contraseña SMTP:" "your_mailtrap_password" "true")
