@@ -195,7 +195,7 @@ class Mailer {
                 return false;
             }
 
-            $message = "Subject: $subject\r\n" . $headers . "\r\n" . $body;
+            $message = "To: <$to>\r\nSubject: $subject\r\n" . $headers . "\r\n" . $body;
             $message = str_replace(array("\r\n", "\r"), "\n", $message);
             $message = str_replace("\n", "\r\n", $message);
             $message = preg_replace('/(?m)^\./', '..', $message);
