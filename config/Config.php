@@ -41,8 +41,8 @@ class Config {
         .env
         En resumen, esta línea define un método llamado load que es estático y público  */
 
-        $envFile = __DIR__ . '/../../.env';
-        /*  Con $envFile = __DIR__ . '/../../.env'; se define una variable local llamada $envFile 
+        $envFile = __DIR__ . '/../.env';
+        /*  Con $envFile = __DIR__ . '/../.env'; se define una variable local llamada $envFile 
             que contiene la ruta al archivo .env.
             __DIR__ es una constante mágica en PHP que devuelve el directorio del archivo actual. 
             En este caso, se utiliza para construir la ruta al archivo .env que se encuentra dos 

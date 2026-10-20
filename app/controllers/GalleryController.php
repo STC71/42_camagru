@@ -155,7 +155,7 @@ class GalleryController extends Controller {
             'comment' => [
                 'id'         => $commentId,
                 'username'   => $_SESSION['username'],
-                'content'    => $content,
+                'comment'    => $content,
                 'created_at' => date('Y-m-d H:i:s')
             ]
         ]);
