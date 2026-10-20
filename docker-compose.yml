@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: camagru_web
+    restart: unless-stopped
     ports:
       - "8080:80"
     volumes:
@@ -31,6 +32,7 @@ services:
       context: ./database
       dockerfile: Dockerfile
     container_name: camagru_db
+    restart: unless-stopped
     ports:
       - "3306:3306"
     environment:
@@ -46,6 +48,7 @@ services:
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: camagru_phpmyadmin
+    restart: unless-stopped
     ports:
       - "8081:80"
     environment:

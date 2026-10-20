@@ -70,7 +70,8 @@ Para que funcionen los emails de verificación y notificaciones:
 | Comando | Descripción |
 |---------|-------------|
 | `docker-compose up --build -d` | Construir y arrancar |
-| `docker-compose down` | Parar y eliminar contenedores |
+| `docker-compose up -d` | Arrancar sin reconstruir |
+| `docker-compose down` | Parar y eliminar contenedores (conserva volúmenes) |
 | `docker-compose logs -f web` | Ver logs del servidor web |
 | `docker-compose exec web bash` | Entrar en el contenedor |
 | `./test_eval.sh` | Guía interactiva de evaluación |
@@ -78,41 +79,52 @@ Para que funcionen los emails de verificación y notificaciones:
 
 ---
 
-### Recuperar contenedores existentes que están detenidos
+## 6. Contenedores detenidos y reinicio automático
 
-Si Camagru ya funcionaba y los contenedores aparecen como `Exited`, no es necesario reconstruirlos ni crear otros nuevos. En ese caso, arranca los contenedores existentes y comprueba los servicios.
+Los servicios de Camagru declaran la política **`restart: unless-stopped`** en `docker-compose.yml`.
+
+Eso significa:
+
+- Si Docker o la máquina se reinician, los contenedores **vuelven a arrancar solos**.
+- Si tú los detienes a propósito (`docker-compose stop` / `down`), **no** se reactivan hasta que los vuelvas a levantar.
+- No hace falta reconstruir imágenes ni borrar volúmenes solo porque estén parados.
+
+### Arranque habitual (lo primero que debes probar)
 
 ```bash
-# 1. Entra en el directorio del proyecto
-cd 42_camagru
-
-# 2. Comprueba el estado de los contenedores, incluidos los detenidos
-docker ps -a
-
-# 3. Arranca primero la base de datos existente
-docker start camagru_db
-
-# 4. Comprueba que MySQL responde
-docker exec camagru_db mysqladmin ping
-
-# La respuesta esperada contiene:
-# mysqld is alive
-
-# 5. Arranca los contenedores web y phpMyAdmin existentes
-docker start camagru_web camagru_phpmyadmin
-
-# 6. Comprueba que los contenedores están en ejecución
+cd ~/sgoinfre/42_outer_core/web_database/camagru   # o la ruta de tu proyecto
+docker-compose up -d
 docker ps
-
-# 7. Comprueba que la aplicación web responde
 curl -I http://localhost:8080
 ```
 
-La respuesta del último comando debería incluir `HTTP/1.1 200 OK` si la página principal está disponible.
+La respuesta esperada del último comando incluye `HTTP/1.1 200 OK`.
 
-**Si los nombres de los contenedores son distintos**, consulta los nombres reales con `docker ps -a` y adapta los comandos `docker start` y `docker exec`.
+### Si `docker-compose` no está disponible o quieres arrancar contenedores ya existentes
 
-**Importante:** esta recuperación arranca los contenedores que ya existen; no elimina sus datos ni reconstruye las imágenes. Si el contenedor no arranca o algún servicio no responde, consulta sus registros antes de hacer cambios:
+```bash
+docker ps -a
+docker start camagru_db
+docker exec camagru_db mysqladmin ping
+docker start camagru_web camagru_phpmyadmin
+docker ps
+curl -I http://localhost:8080
+```
+
+Adapta los nombres si `docker ps -a` muestra otros.
+
+### Comprobar la política de reinicio
+
+```bash
+docker inspect -f '{{.Name}} | restart={{.HostConfig.RestartPolicy.Name}}' \
+  camagru_db camagru_web camagru_phpmyadmin
+```
+
+Debería mostrar `restart=unless-stopped` en los tres.
+
+### Si un servicio no responde
+
+Consulta los logs **antes** de destruir nada:
 
 ```bash
 docker logs --tail 100 camagru_db
@@ -120,37 +132,43 @@ docker logs --tail 100 camagru_web
 docker logs --tail 100 camagru_phpmyadmin
 ```
 
-No uses `docker-compose down -v` como primer intento de solución: la opción `-v` puede eliminar volúmenes y, con ellos, datos persistentes. Tampoco hace falta ejecutar `docker-compose up --build -d` únicamente porque los contenedores estén detenidos.
+**No uses** `docker-compose down -v` como primer intento: la opción `-v` puede eliminar volúmenes y, con ellos, la base de datos.
 
 ---
 
-## 6. Problemas frecuentes
+## 7. Problemas frecuentes
 
 **El contenedor no arranca**
 ```bash
-docker-compose down -v
+docker-compose down
 docker-compose up --build -d
 ```
 
-**Permisos en uploads**
+**Permisos en uploads** (si fallan las subidas; en macOS/Windows a veces `chown` no funciona)
 ```bash
-docker-compose exec web chown -R www-data:www-data /var/www/html/public/uploads
+docker-compose exec web chmod -R 777 /var/www/html/public/uploads
 ```
 
-**Cambiar el puerto**
+**Cuenta creada pero no puedes entrar (“verify your email”)**  
+Si el correo no llega, puedes marcar el usuario como verificado en la BD:
+
+```bash
+source .env
+docker-compose exec db mysql -u root -p"${DB_ROOT_PASS}" -D "${DB_NAME}" -e \
+  "UPDATE users SET verified = 1, verification_token = NULL WHERE username = 'TU_USERNAME';"
+```
+
+**Cambiar el puerto**  
 Edita `docker-compose.yml` (sección `ports`) y la variable `APP_URL` en `.env`.
 
 ---
 
-## 7. Documentación relacionada
+## 8. Documentación relacionada
 
 - [README.md](README.md) – Visión general
 - [COMPLIANCE.md](COMPLIANCE.md) – Checklist de evaluación
 - [docs/docker.md](docs/docker.md) – Detalles de containerización
 - [docs/php.md](docs/php.md) – PHP y extensiones
-
----
-
 
 ---
 
