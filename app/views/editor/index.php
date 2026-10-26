@@ -1,6 +1,9 @@
 <?php $title = 'Editor de Fotos'; include __DIR__ . '/../partials/header.php'; ?>
 
 <div class="editor-container">
+    <!-- Token CSRF global para captura/GIF (AJAX) -->
+    <input type="hidden" id="csrf_token" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+
     <h1>Editor de Fotos 📷</h1>
     <p class="subtitle">Crea tu obra maestra con stickers</p>
     
@@ -12,24 +15,24 @@
     <!-- Tab: Webcam -->
     <div class="tab-content active" id="tab-webcam">
         <div class="webcam-section">
-            <div class="camera-container">
-                <!-- Vista previa en vivo (BONUS) -->
-                <canvas id="live-preview" width="640" height="480"></canvas>
+            <!-- Solo vídeo/canvas (puede tener overflow hidden) -->
+            <div class="camera-container" id="camera-media">
                 <video id="webcam" autoplay playsinline width="640" height="480"></video>
-                
-                <div class="camera-controls">
-                    <button id="start-camera" class="btn btn-primary">🎥 Iniciar Cámara</button>
-                    <button id="capture-photo" class="btn btn-success" disabled>📸 Capturar Foto</button>
-                    <button id="start-gif" class="btn btn-secondary" disabled>🎬 Grabar GIF</button>
-                    <button id="stop-gif" class="btn btn-danger" disabled style="display:none;">⏹️ Detener GIF</button>
-                </div>
-                
-                <!-- Control de tamaño de sticker (BONUS) -->
-                <div class="sticker-size-control" style="display:none;">
-                    <label>Tamaño del Sticker:</label>
-                    <input type="range" id="sticker-size" min="50" max="200" value="100">
-                    <span id="size-value">100%</span>
-                </div>
+                <canvas id="live-preview" width="640" height="480"></canvas>
+            </div>
+
+            <!-- Botones FUERA del contenedor con overflow, siempre visibles -->
+            <div class="camera-controls">
+                <button type="button" id="start-camera" class="btn btn-primary">🎥 Iniciar Cámara</button>
+                <button type="button" id="capture-photo" class="btn btn-success" disabled>📸 Capturar Foto</button>
+                <button type="button" id="start-gif" class="btn btn-secondary" disabled>🎬 Grabar GIF</button>
+                <button type="button" id="stop-gif" class="btn btn-danger" disabled style="display:none;">⏹️ Detener GIF</button>
+            </div>
+
+            <div class="sticker-size-control" id="sticker-size-control" style="display:none;">
+                <label>Tamaño del Sticker:</label>
+                <input type="range" id="sticker-size" min="50" max="200" value="100">
+                <span id="size-value">100px</span>
             </div>
         </div>
     </div>
@@ -64,7 +67,7 @@
         <div class="stickers-grid">
             <?php foreach ($stickers as $sticker): ?>
                 <div class="sticker-item" data-sticker="<?php echo htmlspecialchars($sticker); ?>">
-                    <img src="<?php echo rtrim($_ENV['APP_URL'] ?? 'http://localhost:8080', '/'); ?>/uploads/stickers/<?php echo htmlspecialchars($sticker); ?>" 
+                    <img src="<?php echo rtrim($_ENV['APP_URL'] ?? 'http://localhost:8080', '/'); ?>/<?php echo htmlspecialchars($sticker); ?>" 
                          alt="Sticker">
                 </div>
             <?php endforeach; ?>
@@ -75,19 +78,19 @@
     <canvas id="capture-canvas" width="640" height="480" style="display:none;"></canvas>
     
     <!-- Mis fotos recientes -->
-    <?php if (!empty($myImages)): ?>
+    <?php if (!empty($userImages)): ?>
         <div class="my-images-section">
             <h3>Mis Fotos Recientes</h3>
             <div class="my-images-grid">
-                <?php foreach ($myImages as $image): ?>
+                <?php foreach ($userImages as $image): ?>
                     <div class="my-image-item">
                         <img src="<?php echo rtrim($_ENV['APP_URL'] ?? 'http://localhost:8080', '/'); ?>/uploads/images/<?php echo htmlspecialchars($image['filename']); ?>" 
                              alt="Mi foto">
                         <div class="image-info">
                             <span class="date"><?php echo date('d M Y', strtotime($image['created_at'])); ?></span>
                             <div class="stats">
-                                <span>❤️ <?php echo $image['like_count']; ?></span>
-                                <span>💬 <?php echo $image['comment_count']; ?></span>
+                                <span>❤️ <?php echo isset($image['like_count']) ? $image['like_count'] : 0; ?></span>
+                                <span>💬 <?php echo isset($image['comment_count']) ? $image['comment_count'] : 0; ?></span>
                             </div>
                         </div>
                         <form method="POST" action="<?php echo rtrim($_ENV['APP_URL'] ?? 'http://localhost:8080', '/'); ?>/editor/delete" onsubmit="return confirm('¿Estás seguro de eliminar esta foto?');">
@@ -157,35 +160,57 @@
 .camera-container {
     position: relative;
     display: inline-block;
-    background: black;
+    background: #111;
     border-radius: 12px;
     overflow: hidden;
+    max-width: 100%;
+    line-height: 0; /* evita hueco bajo el vídeo */
 }
 
 #webcam, #live-preview {
     display: block;
     max-width: 100%;
     height: auto;
+    vertical-align: top;
 }
 
 #live-preview {
     position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
     display: none;
     cursor: crosshair;
 }
 
 #live-preview.active {
     display: block;
+    z-index: 2;
+    pointer-events: auto;
+}
+
+#webcam {
+    pointer-events: none;
 }
 
 .camera-controls {
-    padding: 1rem;
+    margin: 1.25rem auto 0;
+    padding: 1rem 1.25rem;
     display: flex;
     justify-content: center;
-    gap: 1rem;
+    align-items: center;
+    gap: 0.75rem;
     flex-wrap: wrap;
+    max-width: 640px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.camera-controls .btn {
+    min-width: 140px;
+    font-weight: 600;
 }
 
 .sticker-size-control {

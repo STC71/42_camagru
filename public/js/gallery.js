@@ -179,31 +179,38 @@ function loadMoreImages() {
     showLoadingIndicator();
     
     // Realizar petición AJAX
-    const url = `/gallery?page=${GalleryState.currentPage}&ajax=1`;
+    // Endpoint JSON real del backend (GalleryController::loadMore)
+    const url = `/gallery/load-more?page=${GalleryState.currentPage}`;
     
-    fetch(url)
-        .then(response => response.json())
+    fetch(url, {
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.images && data.images.length > 0) {
                 appendImages(data.images);
-                
-                if (data.images.length < 5) {
-                    GalleryState.hasMore = false;
-                    showEndMessage();
-                }
-            } else {
+            }
+            // hasMore viene del servidor; si no hay más, mensaje amable
+            if (data.hasMore === false || !data.images || data.images.length === 0) {
                 GalleryState.hasMore = false;
                 showEndMessage();
             }
-            
             GalleryState.loading = false;
             hideLoadingIndicator();
         })
         .catch(error => {
             console.error('Error al cargar más imágenes:', error);
             GalleryState.loading = false;
+            GalleryState.hasMore = false;
             hideLoadingIndicator();
-            showNotification('Error al cargar más imágenes', 'error');
+            // Con pocas fotos no es un error grave: simplemente no hay página 2
+            showEndMessage();
         });
 }
 

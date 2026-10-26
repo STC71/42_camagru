@@ -146,6 +146,27 @@ class Controller {
      */
     protected function requireAuth() {
         if (!isset($_SESSION['user_id'])) {
+            // Peticiones AJAX/fetch: devolver JSON 401 en lugar de redirect HTML
+            $isAjax = (
+                (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])
+                    && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+                || (isset($_SERVER['HTTP_ACCEPT'])
+                    && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)
+                || (isset($_SERVER['CONTENT_TYPE'])
+                    && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false)
+                || (isset($_SERVER['HTTP_CONTENT_TYPE'])
+                    && strpos($_SERVER['HTTP_CONTENT_TYPE'], 'application/x-www-form-urlencoded') !== false
+                    && !empty($_SERVER['HTTP_SEC_FETCH_MODE'])
+                    && $_SERVER['HTTP_SEC_FETCH_MODE'] === 'cors')
+            );
+            // Heurística simple: rutas de editor/gallery por POST suelen ser AJAX
+            $uri = $_SERVER['REQUEST_URI'] ?? '';
+            if ($isAjax || (
+                $_SERVER['REQUEST_METHOD'] === 'POST'
+                && (strpos($uri, '/editor/') !== false || strpos($uri, '/gallery/') !== false)
+            )) {
+                $this->json(['success' => false, 'message' => 'Unauthorized. Please log in again.'], 401);
+            }
             $_SESSION['flash_error'] = 'You must be logged in to access this page.';
             $this->redirect('login');
         }

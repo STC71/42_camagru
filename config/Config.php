@@ -49,12 +49,11 @@ class Config {
             niveles por encima del directorio actual. La ruta resultante se almacena en la variable 
             $envFile, que luego se utiliza para cargar las variables de entorno desde ese archivo.  */
 
-        if (file_exists($envFile)) {
-            /*  file_exists($envFile) es una función de PHP que verifica si un archivo existe en la 
-                ruta especificada. En este caso, se utiliza para comprobar si el archivo .env existe 
-                en la ruta definida por $envFile en la línea anterior.  */
-
-            $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (file_exists($envFile) && is_readable($envFile)) {
+            $lines = @file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            if ($lines === false) {
+                $lines = [];
+            }
             /*  Con $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES); se lee el 
                 contenido del archivo .env que guardamos en $envFile y se almacena en la variable 
                 $lines como un array de líneas. 

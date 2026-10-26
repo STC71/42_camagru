@@ -65,6 +65,10 @@ class EditorController extends Controller {
 
         $imageData   = $_POST['image']   ?? '';
         $stickerPath = $_POST['sticker'] ?? '';
+        // Posición del sticker en % del canvas (centro) y tamaño en px — enviados por el cliente
+        $stickerX    = floatval($_POST['sticker_x'] ?? 50);
+        $stickerY    = floatval($_POST['sticker_y'] ?? 50);
+        $stickerSize = intval($_POST['sticker_size'] ?? 100);
 
         // Validaciones básicas
         if (empty($imageData)) {
@@ -80,7 +84,10 @@ class EditorController extends Controller {
         // El navegador nos manda algo como:
         // "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
         // Nosotros quitamos la parte del principio y decodificamos.
-        $imageData = str_replace('data:image/png;base64,', '', $imageData);
+        // Aceptamos PNG o JPEG en base64
+        if (preg_match('/^data:image\/(png|jpeg|jpg);base64,/', $imageData)) {
+            $imageData = preg_replace('/^data:image\/(png|jpeg|jpg);base64,/', '', $imageData);
+        }
         $imageData = str_replace(' ', '+', $imageData);
         $decodedImage = base64_decode($imageData);
 
@@ -110,24 +117,41 @@ class EditorController extends Controller {
         }
 
         // ------------------------------------------------------------
-        // 3. Superponemos la pegatina sobre la foto (server-side)
+        // 3. Superponemos la pegatina en el SERVIDOR (posición del usuario)
+        //    La imagen recibida es la BASE sin sticker (sin duplicar).
         // ------------------------------------------------------------
-        $finalImage = $this->mergeImages($baseImage, $sticker);
+        $finalImage = $this->mergeImagesAt($baseImage, $sticker, $stickerX, $stickerY, $stickerSize);
 
         // Generamos un nombre único para el archivo
         $filename = $this->generateFilename();
         $filepath = $this->uploadsPath($filename);
 
+        // Asegurar carpeta de subida escribible (volumen Docker / sgoinfre)
+        $uploadDir = dirname($filepath);
+        if (!is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0777, true);
+        }
+        if (!is_writable($uploadDir)) {
+            @chmod($uploadDir, 0777);
+        }
+        if (!is_writable($uploadDir)) {
+            imagedestroy($baseImage);
+            imagedestroy($finalImage);
+            $this->json([
+                'success' => false,
+                'message' => 'Upload directory not writable: ' . $uploadDir
+            ], 500);
+        }
+
         // ------------------------------------------------------------
         // 4. Guardamos el resultado en disco y en la base de datos
         // ------------------------------------------------------------
-        if (imagepng($finalImage, $filepath)) {
+        if (@imagepng($finalImage, $filepath)) {
             $imageModel = $this->model('Image');
             $imageId = $imageModel->create($_SESSION['user_id'], $filename);
 
-            // Liberamos memoria
+            // Liberamos memoria (sticker ya se libera en mergeImagesAt)
             imagedestroy($baseImage);
-            imagedestroy($sticker);
             imagedestroy($finalImage);
 
             if ($imageId) {
@@ -143,7 +167,6 @@ class EditorController extends Controller {
             }
         } else {
             imagedestroy($baseImage);
-            imagedestroy($sticker);
             imagedestroy($finalImage);
             $this->json(['success' => false, 'message' => 'Failed to save image'], 500);
         }
@@ -201,9 +224,12 @@ class EditorController extends Controller {
                 $this->json(['success' => false, 'message' => 'Failed to load sticker'], 500);
             }
 
-            $finalImage = $this->mergeImages($baseImage, $sticker);
+            $ux = floatval($_POST['sticker_x'] ?? 50);
+            $uy = floatval($_POST['sticker_y'] ?? 50);
+            $us = intval($_POST['sticker_size'] ?? 100);
+            $finalImage = $this->mergeImagesAt($baseImage, $sticker, $ux, $uy, $us);
             imagedestroy($baseImage);
-            imagedestroy($sticker);
+            // sticker ya destruido dentro de mergeImagesAt
         }
 
         $filename = $this->generateFilename();
@@ -279,8 +305,9 @@ class EditorController extends Controller {
 
         $framesData  = json_decode($_POST['frames'] ?? '[]', true);
         $stickerPath = $_POST['sticker'] ?? '';
-        $stickerX    = intval($_POST['sticker_x'] ?? 0);
-        $stickerY    = intval($_POST['sticker_y'] ?? 0);
+        // % del frame (centro del sticker) y tamaño en px — coherente con capture()
+        $stickerX    = floatval($_POST['sticker_x'] ?? 50);
+        $stickerY    = floatval($_POST['sticker_y'] ?? 50);
         $stickerSize = intval($_POST['sticker_size'] ?? 100);
 
         if (empty($framesData) || !is_array($framesData) || count($framesData) < 2) {
@@ -301,27 +328,9 @@ class EditorController extends Controller {
         }
 
         // ---------------------------------------------------------------
-        // Redimensionamos la pegatina según el tamaño que eligió el usuario
+        // Redimensionamos la pegatina al tamaño en píxeles pedido por el cliente
         // ---------------------------------------------------------------
-        $originalWidth  = imagesx($sticker);
-        $originalHeight = imagesy($sticker);
-        $newWidth  = max(1, intval($originalWidth  * ($stickerSize / 100)));
-        $newHeight = max(1, intval($originalHeight * ($stickerSize / 100)));
-
-        $resizedSticker = imagecreatetruecolor($newWidth, $newHeight);
-        imagealphablending($resizedSticker, false);
-        imagesavealpha($resizedSticker, true);
-        $transparent = imagecolorallocatealpha($resizedSticker, 0, 0, 0, 127);
-        imagefill($resizedSticker, 0, 0, $transparent);
-
-        imagecopyresampled(
-            $resizedSticker, $sticker,
-            0, 0, 0, 0,
-            $newWidth, $newHeight,
-            $originalWidth, $originalHeight
-        );
-        imagedestroy($sticker);
-        $sticker = $resizedSticker;
+        $sticker = $this->resizeStickerToWidth($sticker, max(10, $stickerSize));
 
         // Aseguramos que existe la carpeta temporal
         $tempDir = $this->tempPath();
@@ -336,7 +345,7 @@ class EditorController extends Controller {
         // Procesamos cada fotograma: decodificamos + aplicamos pegatina
         // ---------------------------------------------------------------
         foreach ($framesData as $index => $frameData) {
-            $frameData = str_replace('data:image/png;base64,', '', $frameData);
+            $frameData = preg_replace('/^data:image\/(png|jpeg|jpg);base64,/', '', $frameData);
             $frameData = str_replace(' ', '+', $frameData);
             $decodedFrame = base64_decode($frameData);
             if ($decodedFrame === false) {
@@ -356,14 +365,15 @@ class EditorController extends Controller {
             // Copiamos el fotograma original
             imagecopy($finalFrame, $frameImage, 0, 0, 0, 0, imagesx($frameImage), imagesy($frameImage));
 
-            // Superponemos la pegatina en la posición que el usuario eligió
+            // Superponemos la pegatina (coordenadas desde % del frame)
             imagealphablending($finalFrame, true);
-            imagecopy(
-                $finalFrame, $sticker,
-                $stickerX, $stickerY,
-                0, 0,
-                imagesx($sticker), imagesy($sticker)
-            );
+            $fw = imagesx($finalFrame);
+            $fh = imagesy($finalFrame);
+            $sw = imagesx($sticker);
+            $sh = imagesy($sticker);
+            $px = (int)(($stickerX / 100.0) * $fw - $sw / 2);
+            $py = (int)(($stickerY / 100.0) * $fh - $sh / 2);
+            imagecopy($finalFrame, $sticker, $px, $py, 0, 0, $sw, $sh);
 
             // Guardamos el fotograma procesado en un archivo temporal
             $tempFilename = $tempDir . '/frame_' . time() . '_' . $index . '_' . bin2hex(random_bytes(4)) . '.png';
@@ -510,31 +520,68 @@ class EditorController extends Controller {
     }
 
     /**
-     * Superpone una pegatina centrada sobre una imagen base
-     * (usado en capture y upload)
+     * Superpone una pegatina centrada (fallback para upload sin posición)
      */
     private function mergeImages($baseImage, $sticker) {
+        return $this->mergeImagesAt($baseImage, $sticker, 50, 50, imagesx($sticker));
+    }
+
+    /**
+     * Redimensiona el sticker a un ancho concreto manteniendo proporción y alpha
+     */
+    private function resizeStickerToWidth($sticker, $targetWidth) {
+        $originalWidth  = imagesx($sticker);
+        $originalHeight = imagesy($sticker);
+        $targetWidth = max(1, (int)$targetWidth);
+        $targetHeight = max(1, (int)round($originalHeight * ($targetWidth / $originalWidth)));
+
+        $resized = imagecreatetruecolor($targetWidth, $targetHeight);
+        imagealphablending($resized, false);
+        imagesavealpha($resized, true);
+        $transparent = imagecolorallocatealpha($resized, 0, 0, 0, 127);
+        imagefill($resized, 0, 0, $transparent);
+
+        imagecopyresampled(
+            $resized, $sticker,
+            0, 0, 0, 0,
+            $targetWidth, $targetHeight,
+            $originalWidth, $originalHeight
+        );
+        imagedestroy($sticker);
+        return $resized;
+    }
+
+    /**
+     * Superpone una pegatina en una posición (% del canvas, centro del sticker)
+     * y con un tamaño en píxeles. Toda la composición es server-side (GD).
+     *
+     * @param resource $baseImage
+     * @param resource $sticker
+     * @param float $posXPercent 0-100
+     * @param float $posYPercent 0-100
+     * @param int $stickerSizePx ancho deseado del sticker
+     */
+    private function mergeImagesAt($baseImage, $sticker, $posXPercent, $posYPercent, $stickerSizePx) {
         $baseWidth  = imagesx($baseImage);
         $baseHeight = imagesy($baseImage);
+
+        $sticker = $this->resizeStickerToWidth($sticker, max(10, (int)$stickerSizePx));
         $stickerWidth  = imagesx($sticker);
         $stickerHeight = imagesy($sticker);
 
-        // Creamos una nueva imagen del tamaño de la base
         $finalImage = imagecreatetruecolor($baseWidth, $baseHeight);
         imagealphablending($finalImage, false);
         imagesavealpha($finalImage, true);
 
-        // Copiamos la foto base
         imagecopy($finalImage, $baseImage, 0, 0, 0, 0, $baseWidth, $baseHeight);
 
-        // Calculamos la posición centrada de la pegatina
-        $x = ($baseWidth  - $stickerWidth)  / 2;
-        $y = ($baseHeight - $stickerHeight) / 2;
+        $x = (int)(($posXPercent / 100.0) * $baseWidth  - $stickerWidth / 2);
+        $y = (int)(($posYPercent / 100.0) * $baseHeight - $stickerHeight / 2);
 
-        // Superponemos la pegatina
         imagealphablending($finalImage, true);
-        imagecopy($finalImage, $sticker, (int)$x, (int)$y, 0, 0, $stickerWidth, $stickerHeight);
+        imagecopy($finalImage, $sticker, $x, $y, 0, 0, $stickerWidth, $stickerHeight);
 
+        imagedestroy($sticker);
         return $finalImage;
     }
 

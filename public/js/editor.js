@@ -1,525 +1,682 @@
 /**
- * Editor JavaScript - Vista previa en vivo y GIF animado
- * BONUS 2: Vista previa en vivo con drag & drop de pegatinas
- * BONUS 5: Generacion de GIF animados
+ * Editor JavaScript - Vista previa en vivo, captura server-side y GIF
+ *
+ * Reglas importantes (subject 42):
+ * - La fusión imagen + sticker se hace en el SERVIDOR (GD).
+ * - El cliente solo envía la foto BASE (sin sticker) + posición/tamaño del sticker.
+ * - Así no hay sticker duplicado y el resultado respeta el drag & drop.
  */
 
-// Estado del editor
 const EditorState = {
     stream: null,
     selectedSticker: null,
     videoElement: null,
-    canvasElement: null,
-    previewCanvas: null,
-    stickerPosition: { x: 50, y: 50 }, // Posición en porcentaje
-    stickerSize: 100, // Tamaño en píxeles
+    previewCanvas: null,   // #live-preview (vídeo + sticker para el usuario)
+    captureCanvas: null,   // #capture-canvas (solo vídeo, oculto)
+    stickerPosition: { x: 50, y: 50 }, // centro del sticker en % del canvas
+    stickerSize: 100,      // tamaño en px del lado del sticker en el preview
     isDragging: false,
     gifFrames: [],
     isRecordingGif: false,
-    gifInterval: null
+    gifInterval: null,
+    previewRunning: false
 };
 
-// Inicializacion
-document.addEventListener('DOMContentLoaded', function() {
-    initializeWebcam();
+document.addEventListener('DOMContentLoaded', function () {
+    EditorState.videoElement = document.getElementById('webcam');
+    EditorState.previewCanvas = document.getElementById('live-preview');
+    EditorState.captureCanvas = document.getElementById('capture-canvas');
+
+    initializeTabs();
+    initializeStartCameraButton();
     initializeStickerSelection();
     initializeCaptureButton();
     initializeUploadButton();
     initializeDeleteButtons();
     initializeGifControls();
+    initializeDragAndDrop();
 });
 
+function getCsrfToken() {
+    const el = document.getElementById('csrf_token')
+        || document.querySelector('input[name="csrf_token"]');
+    return el ? el.value : '';
+}
+
 /**
- * Inicializar webcam
+ * Pestañas webcam / subir archivo
  */
-async function initializeWebcam() {
-    EditorState.videoElement = document.getElementById('webcam');
-    EditorState.canvasElement = document.getElementById('capture-canvas');
-    EditorState.previewCanvas = document.getElementById('preview-canvas');
-    
-    if (!EditorState.videoElement) return;
-    
+function initializeTabs() {
+    document.querySelectorAll('.tab-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.tab-btn').forEach(function (b) {
+                b.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(function (c) {
+                c.classList.remove('active');
+            });
+            this.classList.add('active');
+            const tab = document.getElementById('tab-' + this.dataset.tab);
+            if (tab) {
+                tab.classList.add('active');
+            }
+        });
+    });
+}
+
+/**
+ * Botón "Iniciar Cámara"
+ */
+function initializeStartCameraButton() {
+    const startBtn = document.getElementById('start-camera');
+    if (!startBtn) {
+        // Si no hay botón, intentamos arrancar al cargar
+        startWebcam();
+        return;
+    }
+    startBtn.addEventListener('click', function () {
+        startWebcam();
+    });
+}
+
+async function startWebcam() {
+    if (!EditorState.videoElement) {
+        return;
+    }
     try {
+        if (EditorState.stream) {
+            EditorState.stream.getTracks().forEach(function (t) {
+                t.stop();
+            });
+        }
         EditorState.stream = await navigator.mediaDevices.getUserMedia({
             video: { width: 640, height: 480 },
             audio: false
         });
-        
         EditorState.videoElement.srcObject = EditorState.stream;
-        EditorState.videoElement.play();
-        
-        // Iniciar preview en tiempo real cuando el video este listo
-        EditorState.videoElement.addEventListener('loadedmetadata', () => {
+        await EditorState.videoElement.play();
+
+        EditorState.videoElement.addEventListener('loadedmetadata', function onMeta() {
+            EditorState.videoElement.removeEventListener('loadedmetadata', onMeta);
             startLivePreview();
         });
-        
-        showNotification('Webcam iniciada correctamente', 'success');
-    } catch (error) {
-        console.error('Error al acceder a la webcam:', error);
-        showNotification('No se pudo acceder a la webcam. Por favor, permite el acceso o usa la opción de subir archivo.', 'error');
-        
-        // Mostrar opcion de subida de archivo
-        document.querySelector('.upload-section').style.display = 'block';
+        // Por si metadata ya estaba lista
+        if (EditorState.videoElement.readyState >= 1) {
+            startLivePreview();
+        }
+
+        const startBtn = document.getElementById('start-camera');
+        if (startBtn) {
+            startBtn.textContent = '🎥 Cámara activa';
+            startBtn.disabled = true;
+        }
+        updateActionButtonsState();
+        showNotification('Cámara iniciada', 'success');
+    } catch (err) {
+        console.error(err);
+        showNotification('No se pudo acceder a la webcam', 'error');
     }
 }
 
 /**
- * BONUS 2: Vista previa en vivo con sticker superpuesto
+ * Bucle de vista previa: vídeo + sticker (solo visual)
  */
 function startLivePreview() {
-    const ctx = EditorState.previewCanvas.getContext('2d');
-    EditorState.previewCanvas.width = EditorState.videoElement.videoWidth;
-    EditorState.previewCanvas.height = EditorState.videoElement.videoHeight;
-    
-    function drawPreview() {
-        if (!EditorState.videoElement.paused && !EditorState.videoElement.ended) {
-            // Dibujar video
-            ctx.drawImage(
-                EditorState.videoElement,
-                0, 0,
-                EditorState.previewCanvas.width,
-                EditorState.previewCanvas.height
-            );
-            
-            // Dibujar pegatina si esta seleccionada
+    if (!EditorState.previewCanvas || !EditorState.videoElement) {
+        return;
+    }
+    if (EditorState.previewRunning) {
+        return;
+    }
+    EditorState.previewRunning = true;
+
+    const w = EditorState.videoElement.videoWidth || 640;
+    const h = EditorState.videoElement.videoHeight || 480;
+    EditorState.previewCanvas.width = w;
+    EditorState.previewCanvas.height = h;
+    if (EditorState.captureCanvas) {
+        EditorState.captureCanvas.width = w;
+        EditorState.captureCanvas.height = h;
+    }
+
+    // Canvas encima del vídeo (el vídeo sigue dando el tamaño al contenedor)
+    EditorState.previewCanvas.classList.add('active');
+    EditorState.previewCanvas.style.display = 'block';
+    EditorState.previewCanvas.style.pointerEvents = 'auto';
+    EditorState.previewCanvas.style.zIndex = '2';
+    // El vídeo no debe “comerse” los clics/drags del sticker
+    EditorState.videoElement.style.pointerEvents = 'none';
+
+    function draw() {
+        if (!EditorState.previewRunning) {
+            return;
+        }
+        const ctx = EditorState.previewCanvas.getContext('2d');
+        const width = EditorState.previewCanvas.width;
+        const height = EditorState.previewCanvas.height;
+
+        if (EditorState.videoElement.readyState >= 2) {
+            ctx.drawImage(EditorState.videoElement, 0, 0, width, height);
             if (EditorState.selectedSticker) {
-                drawStickerOnCanvas(ctx, EditorState.previewCanvas.width, EditorState.previewCanvas.height);
+                drawStickerOnCanvas(ctx, width, height);
             }
         }
-        
-        requestAnimationFrame(drawPreview);
+        requestAnimationFrame(draw);
     }
-    
-    drawPreview();
-    initializeDragAndDrop();
-}
-
-/**
- * BONUS 2: Drag & Drop para posicionar stickers
- */
-function initializeDragAndDrop() {
-    const canvas = EditorState.previewCanvas;
-    
-    canvas.addEventListener('mousedown', startDrag);
-    canvas.addEventListener('mousemove', drag);
-    canvas.addEventListener('mouseup', stopDrag);
-    canvas.addEventListener('mouseleave', stopDrag);
-    
-    // Soporte para touch (móviles)
-    canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const mouseEvent = new MouseEvent('mousedown', {
-            clientX: touch.clientX,
-            clientY: touch.clientY
-        });
-        canvas.dispatchEvent(mouseEvent);
-    });
-    
-    canvas.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const mouseEvent = new MouseEvent('mousemove', {
-            clientX: touch.clientX,
-            clientY: touch.clientY
-        });
-        canvas.dispatchEvent(mouseEvent);
-    });
-    
-    canvas.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        const mouseEvent = new MouseEvent('mouseup', {});
-        canvas.dispatchEvent(mouseEvent);
-    });
-}
-
-function startDrag(e) {
-    if (!EditorState.selectedSticker) return;
-    
-    const rect = EditorState.previewCanvas.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    
-    // Verificar si el click esta sobre la pegatina
-    const stickerX = EditorState.stickerPosition.x;
-    const stickerY = EditorState.stickerPosition.y;
-    const stickerWidth = (EditorState.stickerSize / EditorState.previewCanvas.width) * 100;
-    
-    if (Math.abs(x - stickerX) < stickerWidth / 2 && 
-        Math.abs(y - stickerY) < stickerWidth / 2) {
-        EditorState.isDragging = true;
-        EditorState.previewCanvas.style.cursor = 'grabbing';
-    }
-}
-
-function drag(e) {
-    if (!EditorState.isDragging) return;
-    
-    const rect = EditorState.previewCanvas.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    
-    // Limitar dentro del canvas
-    EditorState.stickerPosition.x = Math.max(10, Math.min(90, x));
-    EditorState.stickerPosition.y = Math.max(10, Math.min(90, y));
-}
-
-function stopDrag() {
-    EditorState.isDragging = false;
-    if (EditorState.previewCanvas) {
-        EditorState.previewCanvas.style.cursor = EditorState.selectedSticker ? 'grab' : 'default';
-    }
+    draw();
 }
 
 function drawStickerOnCanvas(ctx, width, height) {
-    const stickerImg = document.querySelector(`.sticker-item.selected img`);
-    if (!stickerImg) return;
-    
-    const x = (EditorState.stickerPosition.x / 100) * width - EditorState.stickerSize / 2;
-    const y = (EditorState.stickerPosition.y / 100) * height - EditorState.stickerSize / 2;
-    
-    ctx.drawImage(stickerImg, x, y, EditorState.stickerSize, EditorState.stickerSize);
+    const stickerImg = document.querySelector('.sticker-item.selected img');
+    if (!stickerImg || !stickerImg.complete) {
+        return;
+    }
+    const size = EditorState.stickerSize;
+    const x = (EditorState.stickerPosition.x / 100) * width - size / 2;
+    const y = (EditorState.stickerPosition.y / 100) * height - size / 2;
+    ctx.drawImage(stickerImg, x, y, size, size);
+}
+
+/**
+ * Captura SOLO el frame de vídeo (sin sticker) en el canvas oculto
+ */
+function captureBaseFrameDataUrl(asJpeg) {
+    if (!EditorState.captureCanvas || !EditorState.videoElement) {
+        return null;
+    }
+    let w = EditorState.videoElement.videoWidth || EditorState.captureCanvas.width;
+    let h = EditorState.videoElement.videoHeight || EditorState.captureCanvas.height;
+    // Limitar resolución para no reventar post_max_size / memoria
+    const maxW = asJpeg ? 480 : 640;
+    if (w > maxW) {
+        h = Math.round(h * (maxW / w));
+        w = maxW;
+    }
+    EditorState.captureCanvas.width = w;
+    EditorState.captureCanvas.height = h;
+    const ctx = EditorState.captureCanvas.getContext('2d');
+    ctx.drawImage(EditorState.videoElement, 0, 0, w, h);
+    if (asJpeg) {
+        return EditorState.captureCanvas.toDataURL('image/jpeg', 0.7);
+    }
+    return EditorState.captureCanvas.toDataURL('image/png');
+}
+
+/**
+ * Drag & drop del sticker sobre el canvas de preview
+ */
+function initializeDragAndDrop() {
+    const canvas = EditorState.previewCanvas || document.getElementById('live-preview');
+    if (!canvas) {
+        return;
+    }
+
+    // Clic = colocar sticker en ese punto; arrastrar = moverlo
+    canvas.addEventListener('mousedown', function (e) {
+        if (!EditorState.selectedSticker) {
+            return;
+        }
+        EditorState.isDragging = true;
+        canvas.style.cursor = 'grabbing';
+        updateStickerPositionFromEvent(e, canvas);
+        e.preventDefault();
+    });
+    window.addEventListener('mousemove', function (e) {
+        if (!EditorState.isDragging) {
+            return;
+        }
+        updateStickerPositionFromEvent(e, canvas);
+    });
+    window.addEventListener('mouseup', function () {
+        EditorState.isDragging = false;
+        if (canvas) {
+            canvas.style.cursor = EditorState.selectedSticker ? 'grab' : 'default';
+        }
+    });
+
+    // Táctil
+    canvas.addEventListener('touchstart', function (e) {
+        if (!EditorState.selectedSticker || !e.touches[0]) {
+            return;
+        }
+        EditorState.isDragging = true;
+        updateStickerPositionFromTouch(e.touches[0], canvas);
+        e.preventDefault();
+    }, { passive: false });
+    canvas.addEventListener('touchmove', function (e) {
+        if (!EditorState.isDragging || !e.touches[0]) {
+            return;
+        }
+        updateStickerPositionFromTouch(e.touches[0], canvas);
+        e.preventDefault();
+    }, { passive: false });
+    canvas.addEventListener('touchend', function () {
+        EditorState.isDragging = false;
+    });
+}
+
+function updateStickerPositionFromEvent(e, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    EditorState.stickerPosition.x = Math.max(5, Math.min(95, x));
+    EditorState.stickerPosition.y = Math.max(5, Math.min(95, y));
+}
+
+function updateStickerPositionFromTouch(touch, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+    EditorState.stickerPosition.x = Math.max(5, Math.min(95, x));
+    EditorState.stickerPosition.y = Math.max(5, Math.min(95, y));
 }
 
 /**
  * Selección de stickers
  */
 function initializeStickerSelection() {
-    const stickerItems = document.querySelectorAll('.sticker-item');
-    
-    stickerItems.forEach(item => {
-        item.addEventListener('click', function() {
-            // Remover seleccion anterior
-            document.querySelectorAll('.sticker-item').forEach(s => s.classList.remove('selected'));
-            
-            // Seleccionar nueva pegatina
+    document.querySelectorAll('.sticker-item').forEach(function (item) {
+        item.addEventListener('click', function () {
+            document.querySelectorAll('.sticker-item').forEach(function (s) {
+                s.classList.remove('selected');
+            });
             this.classList.add('selected');
             EditorState.selectedSticker = this.dataset.sticker;
-            
-            // Habilitar boton de captura
-            const captureBtn = document.getElementById('capture-btn');
-            if (captureBtn) {
-                captureBtn.disabled = false;
+
+            const sizeControl = document.getElementById('sticker-size-control') || document.querySelector('.sticker-size-control');
+            if (sizeControl) {
+                sizeControl.style.display = 'block';
             }
-            
-            // Cambiar cursor del canvas
             if (EditorState.previewCanvas) {
                 EditorState.previewCanvas.style.cursor = 'grab';
             }
-            
-            showNotification('Sticker seleccionado. ¡Puedes arrastrarlo para posicionarlo!', 'success');
+            updateActionButtonsState();
+            showNotification('Sticker seleccionado. Arrástralo para posicionarlo.', 'success');
         });
     });
-    
-    // Control de tamaño de la pegatina
+
     const sizeSlider = document.getElementById('sticker-size');
     if (sizeSlider) {
-        sizeSlider.addEventListener('input', function() {
-            EditorState.stickerSize = parseInt(this.value);
-            document.getElementById('size-value').textContent = this.value + 'px';
+        sizeSlider.addEventListener('input', function () {
+            EditorState.stickerSize = parseInt(this.value, 10) || 100;
+            const label = document.getElementById('size-value');
+            if (label) {
+                label.textContent = this.value + 'px';
+            }
         });
     }
 }
 
-/**
- * Captura de foto con sticker
- */
-function initializeCaptureButton() {
-    const captureBtn = document.getElementById('capture-btn');
-    if (!captureBtn) return;
-    
-    captureBtn.addEventListener('click', async function() {
-        if (!EditorState.selectedSticker) {
-            showNotification('Por favor, selecciona un sticker primero', 'error');
-            return;
-        }
-        
-        this.disabled = true;
-        this.textContent = 'Capturando...';
-        
-        try {
-            // Capturar frame actual del canvas de preview
-            const imageData = EditorState.previewCanvas.toDataURL('image/png');
-            
-            // Enviar al servidor
-            const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-            
-            const response = await fetch('/editor/capture', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `image=${encodeURIComponent(imageData)}&sticker=${EditorState.selectedSticker}&csrf_token=${csrfToken}`
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                showNotification('¡Foto capturada con éxito!', 'success');
-                addImageToGallery(result.filename, result.url);
-            } else {
-                showNotification(result.message || 'Error al capturar foto', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showNotification('Error al capturar foto', 'error');
-        } finally {
-            this.disabled = false;
-            this.textContent = 'Capturar Foto';
+function updateActionButtonsState() {
+    const canCapture = !!(EditorState.selectedSticker && EditorState.stream);
+    ['capture-photo', 'start-gif'].forEach(function (id) {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.disabled = !canCapture;
         }
     });
 }
 
 /**
- * Subida de archivo
+ * Captura: envía imagen BASE + datos del sticker al servidor
+ */
+function initializeCaptureButton() {
+    const captureBtn = document.getElementById('capture-photo');
+    if (!captureBtn) {
+        return;
+    }
+
+    captureBtn.addEventListener('click', async function () {
+        if (!EditorState.selectedSticker) {
+            showNotification('Selecciona un sticker primero', 'error');
+            return;
+        }
+        if (!EditorState.stream) {
+            showNotification('Inicia la cámara primero', 'error');
+            return;
+        }
+
+        const imageData = captureBaseFrameDataUrl();
+        if (!imageData) {
+            showNotification('No se pudo capturar el frame', 'error');
+            return;
+        }
+
+        this.disabled = true;
+        const originalText = this.textContent;
+        this.textContent = 'Capturando...';
+
+        try {
+            const body = new URLSearchParams();
+            body.set('image', imageData);
+            body.set('sticker', EditorState.selectedSticker);
+            body.set('sticker_x', String(EditorState.stickerPosition.x));
+            body.set('sticker_y', String(EditorState.stickerPosition.y));
+            body.set('sticker_size', String(EditorState.stickerSize));
+            body.set('csrf_token', getCsrfToken());
+
+            const response = await fetch('/editor/capture', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: body.toString()
+            });
+            if (response.status === 401) {
+                showNotification('Sesión caducada. Vuelve a iniciar sesión.', 'error');
+                window.location.href = '/login';
+                return;
+            }
+            const result = await response.json();
+
+            if (result.success) {
+                showNotification('¡Foto capturada con éxito!', 'success');
+                if (result.url) {
+                    addImageToGallery(result.filename, result.url);
+                }
+            } else {
+                showNotification(result.message || 'Error al capturar foto', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showNotification('Error al capturar foto', 'error');
+        } finally {
+            this.disabled = false;
+            this.textContent = originalText;
+            updateActionButtonsState();
+        }
+    });
+}
+
+/**
+ * Subida de archivo (0 o 1 sticker) — no tocamos la lógica del backend
  */
 function initializeUploadButton() {
     const uploadForm = document.getElementById('upload-form');
-    if (!uploadForm) return;
-    
-    uploadForm.addEventListener('submit', async function(e) {
+    if (!uploadForm) {
+        return;
+    }
+
+    uploadForm.addEventListener('submit', async function (e) {
         e.preventDefault();
-        
-        // CORRECCIÓN PDF EVAL: Permite subir imagen con 0 pegatinas
-        // Se borró el bloqueo estricto de sticker para ficheros subidos del PC
-        
-        const fileInput = document.getElementById('file-input'); // Usar ID idéntico a la vista
-        if (!fileInput.files.length) {
-            showNotification('Por favor, selecciona una imagen', 'error');
+
+        const fileInput = document.getElementById('file-input');
+        if (!fileInput || !fileInput.files.length) {
+            showNotification('Selecciona una imagen', 'error');
             return;
         }
-        
-        const formData = new FormData(this);
-        
-        // El backend espera $_FILES['image'] y opcionalmente $_POST['sticker']
+
+        const formData = new FormData();
         formData.append('image', fileInput.files[0]);
+        formData.append('csrf_token', getCsrfToken());
         if (EditorState.selectedSticker) {
             formData.append('sticker', EditorState.selectedSticker);
+            formData.append('sticker_x', String(EditorState.stickerPosition.x));
+            formData.append('sticker_y', String(EditorState.stickerPosition.y));
+            formData.append('sticker_size', String(EditorState.stickerSize));
         }
-        
+
         const submitBtn = this.querySelector('button[type="submit"]');
-        
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Subiendo...';
-        
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Subiendo...';
+        }
+
         try {
             const response = await fetch('/editor/upload', {
                 method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
                 body: formData
             });
-            
             const result = await response.json();
-            
             if (result.success) {
                 showNotification('¡Imagen subida con éxito!', 'success');
-                addImageToGallery(result.filename, result.url);
+                if (result.url) {
+                    addImageToGallery(result.filename, result.url);
+                }
                 fileInput.value = '';
             } else {
                 showNotification(result.message || 'Error al subir imagen', 'error');
             }
-        } catch (error) {
-            console.error('Error:', error);
+        } catch (err) {
+            console.error(err);
             showNotification('Error al subir imagen', 'error');
         } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Subir Imagen';
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Subir Imagen';
+            }
         }
     });
 }
 
 /**
- * BONUS 5: Generación de GIF Animado
+ * GIF: frames BASE (sin sticker) + FormData (para que PHP rellene $_POST)
  */
 function initializeGifControls() {
-    const startGifBtn = document.getElementById('start-gif-btn');
-    const stopGifBtn = document.getElementById('stop-gif-btn');
-    
-    if (startGifBtn) {
-        startGifBtn.addEventListener('click', startGifRecording);
+    const startBtn = document.getElementById('start-gif');
+    const stopBtn = document.getElementById('stop-gif');
+    if (startBtn) {
+        startBtn.addEventListener('click', startGifRecording);
     }
-    
-    if (stopGifBtn) {
-        stopGifBtn.addEventListener('click', stopGifRecording);
+    if (stopBtn) {
+        stopBtn.addEventListener('click', stopGifRecording);
     }
 }
 
 function startGifRecording() {
     if (!EditorState.selectedSticker) {
-        showNotification('Por favor, selecciona un sticker primero', 'error');
+        showNotification('Selecciona un sticker primero', 'error');
         return;
     }
-    
+    if (!EditorState.stream) {
+        showNotification('Inicia la cámara primero', 'error');
+        return;
+    }
+
     EditorState.isRecordingGif = true;
     EditorState.gifFrames = [];
-    
-    const startBtn = document.getElementById('start-gif-btn');
-    const stopBtn = document.getElementById('stop-gif-btn');
-    
-    startBtn.disabled = true;
-    stopBtn.disabled = false;
-    
-    showNotification('Grabando GIF... (máximo 3 segundos)', 'info');
-    
-    // Capturar frames cada 100ms (10 fps)
+
+    const startBtn = document.getElementById('start-gif');
+    const stopBtn = document.getElementById('stop-gif');
+    if (startBtn) {
+        startBtn.disabled = true;
+        startBtn.style.display = 'none';
+    }
+    if (stopBtn) {
+        stopBtn.disabled = false;
+        stopBtn.style.display = 'inline-block';
+    }
+
+    showNotification('Grabando GIF... (máx. 3 s)', 'info');
+
     let frameCount = 0;
-    const maxFrames = 30; // 3 segundos a 10 fps
-    
-    EditorState.gifInterval = setInterval(() => {
+    // Menos frames y JPEG para no superar post_max_size (8M por defecto)
+    const maxFrames = 12;
+
+    EditorState.gifInterval = setInterval(function () {
         if (frameCount >= maxFrames) {
             stopGifRecording();
             return;
         }
-        
-        // Capturar frame actual
-        const frameData = EditorState.previewCanvas.toDataURL('image/png');
-        EditorState.gifFrames.push(frameData);
-        frameCount++;
-        
-        // Actualizar progreso
-        const progress = Math.round((frameCount / maxFrames) * 100);
-        document.getElementById('gif-progress').textContent = `${progress}%`;
-    }, 100);
+        // Frame SIN sticker — el servidor aplica el sticker
+        const frameData = captureBaseFrameDataUrl(true);
+        if (frameData) {
+            EditorState.gifFrames.push(frameData);
+            frameCount++;
+        }
+    }, 150);
 }
 
 async function stopGifRecording() {
     EditorState.isRecordingGif = false;
-    
     if (EditorState.gifInterval) {
         clearInterval(EditorState.gifInterval);
         EditorState.gifInterval = null;
     }
-    
-    const startBtn = document.getElementById('start-gif-btn');
-    const stopBtn = document.getElementById('stop-gif-btn');
-    
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
-    
-    if (EditorState.gifFrames.length < 5) {
-        showNotification('Se necesitan al menos 5 frames para crear un GIF', 'error');
+
+    const startBtn = document.getElementById('start-gif');
+    const stopBtn = document.getElementById('stop-gif');
+    if (startBtn) {
+        startBtn.style.display = 'inline-block';
+    }
+    if (stopBtn) {
+        stopBtn.disabled = true;
+        stopBtn.style.display = 'none';
+    }
+    updateActionButtonsState();
+
+    if (EditorState.gifFrames.length < 2) {
+        showNotification('Se necesitan más frames para el GIF', 'error');
+        EditorState.gifFrames = [];
         return;
     }
-    
-    showNotification('Procesando GIF...', 'info');
-    
+
+    showNotification('Procesando GIF en el servidor...', 'info');
+
     try {
-        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-        
+        // FormData → PHP rellena $_POST (CSRF y frames funcionan)
+        const formData = new FormData();
+        formData.append('frames', JSON.stringify(EditorState.gifFrames));
+        formData.append('sticker', EditorState.selectedSticker);
+        formData.append('sticker_x', String(EditorState.stickerPosition.x));
+        formData.append('sticker_y', String(EditorState.stickerPosition.y));
+        formData.append('sticker_size', String(EditorState.stickerSize));
+        formData.append('csrf_token', getCsrfToken());
+
         const response = await fetch('/editor/create-gif', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
-                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             },
-            body: JSON.stringify({
-                frames: EditorState.gifFrames,
-                sticker: EditorState.selectedSticker,
-                csrf_token: csrfToken
-            })
+            body: formData
         });
-        
         const result = await response.json();
-        
+
         if (result.success) {
-            showNotification('¡GIF creado exitosamente!', 'success');
-            addImageToGallery(result.filename, result.url);
+            showNotification('¡GIF creado!', 'success');
+            if (result.url) {
+                addImageToGallery(result.filename, result.url);
+            }
         } else {
             showNotification(result.message || 'Error al crear GIF', 'error');
         }
-    } catch (error) {
-        console.error('Error:', error);
+    } catch (err) {
+        console.error(err);
         showNotification('Error al crear GIF', 'error');
     } finally {
         EditorState.gifFrames = [];
-        document.getElementById('gif-progress').textContent = '0%';
     }
 }
 
 /**
- * Eliminar imágenes
+ * Borrado de fotos propias
  */
 function initializeDeleteButtons() {
-    const deleteButtons = document.querySelectorAll('.btn-delete');
-    
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', async function(e) {
-            e.preventDefault();
-            
-            if (!confirm('¿Estás seguro de que quieres eliminar esta imagen?')) {
+    document.querySelectorAll('.btn-delete').forEach(function (button) {
+        // Evitar duplicar listeners
+        if (button.dataset.bound === '1') {
+            return;
+        }
+        button.dataset.bound = '1';
+
+        button.addEventListener('click', async function (e) {
+            // Si está dentro de un form clásico POST, dejamos el submit nativo
+            if (this.closest('form') && this.getAttribute('type') === 'submit') {
                 return;
             }
-            
+            e.preventDefault();
+
+            if (!confirm('¿Eliminar esta foto?')) {
+                return;
+            }
+
             const imageId = this.dataset.imageId;
-            const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-            
+            if (!imageId || imageId === 'new') {
+                const item = this.closest('.my-image-item, .thumbnail-item');
+                if (item) {
+                    item.remove();
+                }
+                return;
+            }
+
             try {
+                const body = new URLSearchParams();
+                body.set('image_id', imageId);
+                body.set('csrf_token', getCsrfToken());
+
                 const response = await fetch('/editor/delete', {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
                     },
-                    body: `image_id=${imageId}&csrf_token=${csrfToken}`
+                    body: body.toString()
                 });
-                
                 const result = await response.json();
-                
                 if (result.success) {
-                    // Remover elemento del DOM
-                    this.closest('.thumbnail-item').remove();
+                    const item = this.closest('.my-image-item, .thumbnail-item');
+                    if (item) {
+                        item.remove();
+                    }
                     showNotification('Imagen eliminada', 'success');
                 } else {
-                    showNotification('Error al eliminar imagen', 'error');
+                    showNotification(result.message || 'Error al eliminar', 'error');
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                showNotification('Error al eliminar imagen', 'error');
+            } catch (err) {
+                console.error(err);
+                showNotification('Error al eliminar', 'error');
             }
         });
     });
 }
 
-/**
- * Agregar imagen a la galería de miniaturas
- */
 function addImageToGallery(filename, url) {
-    const gallery = document.querySelector('.thumbnails-grid');
-    if (!gallery) return;
-    
-    const thumbnail = document.createElement('div');
-    thumbnail.className = 'thumbnail-item';
-    thumbnail.innerHTML = `
-        <img src="${url}" alt="Foto capturada">
-        <button class="btn-delete" data-image-id="new">
-            <span class="delete-icon">🗑️</span>
-        </button>
-    `;
-    
-    gallery.prepend(thumbnail);
-    
-    // Re-inicializar event listeners
-    initializeDeleteButtons();
+    const gallery = document.querySelector('.my-images-grid') || document.querySelector('.thumbnails-grid');
+    if (!gallery) {
+        return;
+    }
+
+    const item = document.createElement('div');
+    item.className = 'my-image-item';
+    item.innerHTML =
+        '<img src="' + url + '" alt="Foto capturada">' +
+        '<div class="image-info"><span class="date">Ahora</span></div>';
+    gallery.prepend(item);
 }
 
-/**
- * Función auxiliar para notificaciones
- */
-function showNotification(message, type = 'info') {
+function showNotification(message, type) {
+    type = type || 'info';
     const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
+    notification.className = 'notification notification-' + type;
     notification.textContent = message;
-    
     document.body.appendChild(notification);
-    
-    setTimeout(() => notification.classList.add('show'), 10);
-    
-    setTimeout(() => {
+    setTimeout(function () {
+        notification.classList.add('show');
+    }, 10);
+    setTimeout(function () {
         notification.classList.remove('show');
-        setTimeout(() => notification.remove(), 300);
+        setTimeout(function () {
+            notification.remove();
+        }, 300);
     }, 3000);
 }
 
-// Limpiar stream al salir de la página
-window.addEventListener('beforeunload', () => {
+window.addEventListener('beforeunload', function () {
     if (EditorState.stream) {
-        EditorState.stream.getTracks().forEach(track => track.stop());
+        EditorState.stream.getTracks().forEach(function (track) {
+            track.stop();
+        });
     }
 });

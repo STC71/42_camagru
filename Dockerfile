@@ -73,6 +73,9 @@ COPY . /var/www/html
 # -----------------------------------------------------------------------------
 COPY apache.conf /etc/apache2/sites-available/000-default.conf
 
+# Límites PHP para fotos/GIF en base64 (por defecto post_max_size=8M es insuficiente)
+COPY php-camagru.ini /usr/local/etc/php/conf.d/camagru.ini
+
 # -----------------------------------------------------------------------------
 # 6. Creamos las carpetas de subida y les damos permisos correctos
 # -----------------------------------------------------------------------------
@@ -82,11 +85,15 @@ COPY apache.conf /etc/apache2/sites-available/000-default.conf
 RUN mkdir -p /var/www/html/public/uploads/images \
     && mkdir -p /var/www/html/public/uploads/temp \
     && chown -R www-data:www-data /var/www/html/public/uploads \
-    && chmod -R 775 /var/www/html/public/uploads
+    && chmod -R 777 /var/www/html/public/uploads
 
 # -----------------------------------------------------------------------------
 # 7. Pequeño ajuste para que los permisos de archivos creados sean correctos
 # -----------------------------------------------------------------------------
+RUN mkdir -p /var/lib/php/sessions \
+    && chown -R www-data:www-data /var/lib/php/sessions \
+    && chmod 1733 /var/lib/php/sessions
+
 RUN echo "umask 0000" >> /etc/apache2/envvars
 
 # -----------------------------------------------------------------------------
