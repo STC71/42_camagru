@@ -1,10 +1,29 @@
-<?php $title = 'Galería'; include __DIR__ . '/../partials/header.php'; ?>
+<?php $title = function_exists('__') ? __('gallery.title') : 'Gallery'; include __DIR__ . '/../partials/header.php'; ?>
 
 <div class="gallery-container">
-    <h1>Galería Pública 📸</h1>
-    <p class="subtitle">Explora las creaciones de nuestra comunidad</p>
+    <?php if (!empty($csrf_token)): ?>
+    <input type="hidden" id="gallery-csrf" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+    <?php endif; ?>
+    <h1><?php echo function_exists('__') ? __('gallery.title') : 'Galería Pública'; ?> 📸</h1>
+    <p class="subtitle"><?php echo function_exists('__') ? __('gallery.subtitle') : 'Explora las creaciones de nuestra comunidad'; ?></p>
     
     <div class="gallery-grid">
+        <?php if (empty($images)): ?>
+            <div class="gallery-empty">
+                <div class="gallery-empty-icon" aria-hidden="true">📷</div>
+                <h2><?php echo function_exists('__') ? __('gallery.empty_title') : 'Aún no hay fotos'; ?></h2>
+                <p><?php echo function_exists('__') ? __('gallery.empty_text') : 'Sé el primero en compartir una creación desde el Editor.'; ?></p>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <a class="btn" href="<?php echo rtrim($_ENV['APP_URL'] ?? 'http://localhost:8080', '/'); ?>/editor">
+                        <?php echo function_exists('__') ? __('nav.editor') : 'Editor'; ?>
+                    </a>
+                <?php else: ?>
+                    <a class="btn" href="<?php echo rtrim($_ENV['APP_URL'] ?? 'http://localhost:8080', '/'); ?>/register">
+                        <?php echo function_exists('__') ? __('home.get_started') : 'Empezar'; ?>
+                    </a>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
         <?php foreach ($images as $image): ?>
             <div class="gallery-item" id="image-<?php echo $image['id']; ?>">
                 <img src="<?php echo rtrim($_ENV['APP_URL'] ?? 'http://localhost:8080', '/'); ?>/uploads/images/<?php echo htmlspecialchars($image['filename']); ?>" 
@@ -33,12 +52,20 @@
                         <button class="btn-share" 
                                 data-image-id="<?php echo $image['id']; ?>" 
                                 data-filename="<?php echo htmlspecialchars($image['filename']); ?>">
-                            🔗 Compartir
+                            🔗 <?php echo function_exists('__') ? __('gallery.share') : 'Compartir'; ?>
                         </button>
+                        <?php if (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$image['user_id']): ?>
+                            <button type="button"
+                                    class="btn-delete-image"
+                                    data-image-id="<?php echo (int)$image['id']; ?>"
+                                    title="<?php echo function_exists('__') ? htmlspecialchars(__('gallery.delete')) : 'Borrar'; ?>">
+                                🗑️ <?php echo function_exists('__') ? __('gallery.delete') : 'Borrar'; ?>
+                            </button>
+                        <?php endif; ?>
                     </div>
                     
                     <div class="comments-section">
-                        <div class="comment-count"><?php echo $image['comment_count']; ?> comentarios</div>
+                        <div class="comment-count"><?php echo $image['comment_count']; ?> <?php echo function_exists('__') ? __('gallery.comments') : 'comentarios'; ?></div>
                         
                         <div class="comments-list">
                             <?php if (isset($comments[$image['id']])): ?>
@@ -55,16 +82,16 @@
                         <?php if (isset($_SESSION['user_id'])): ?>
                             <form class="comment-form" data-image-id="<?php echo $image['id']; ?>">
                                 <textarea name="comment" 
-                                          placeholder="Añade un comentario..." 
+                                          placeholder="<?php echo function_exists('__') ? htmlspecialchars(__('gallery.add_comment')) : 'Añade un comentario...'; ?>" 
                                           maxlength="500" 
                                           rows="2" 
                                           required></textarea>
                                 <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                                <button type="submit" class="btn btn-secondary">Comentar</button>
+                                <button type="submit" class="btn btn-secondary"><?php echo function_exists('__') ? __('gallery.comment') : 'Comentar'; ?></button>
                             </form>
                         <?php else: ?>
                             <p class="login-prompt">
-                                <a href="<?php echo rtrim($_ENV['APP_URL'] ?? 'http://localhost:8080', '/'); ?>/login">Inicia sesión</a> para comentar
+                                <a href="<?php echo rtrim($_ENV['APP_URL'] ?? 'http://localhost:8080', '/'); ?>/login">Inicia sesión</a> <?php echo function_exists('__') ? __('gallery.login_to_comment') : 'Inicia sesión para comentar'; ?>
                             </p>
                         <?php endif; ?>
                     </div>
@@ -353,5 +380,45 @@
 </style>
 
 <script src="<?php echo rtrim($_ENV['APP_URL'] ?? 'http://localhost:8080', '/'); ?>/js/gallery.js"></script>
+
+
+<script>
+(function () {
+    document.querySelectorAll('.btn-delete-image').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var id = btn.getAttribute('data-image-id');
+            if (!id) return;
+            if (!confirm(<?php echo json_encode(function_exists('__') ? __('gallery.delete_confirm') : '¿Borrar esta foto?'); ?>)) {
+                return;
+            }
+            var csrf = document.querySelector('input[name="csrf_token"]');
+            var token = csrf ? csrf.value : '';
+            var body = new URLSearchParams();
+            body.append('image_id', id);
+            body.append('csrf_token', token);
+            fetch('/editor/delete', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: body.toString()
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data && data.success) {
+                    var card = document.getElementById('image-' + id);
+                    if (card) card.remove();
+                } else {
+                    alert((data && data.message) || 'Error');
+                }
+            })
+            .catch(function () { alert('Error'); });
+        });
+    });
+})();
+</script>
 
 <?php include __DIR__ . '/../partials/footer.php'; ?>

@@ -1,3 +1,19 @@
+function showCaptureLoading(show) {
+    var el = document.getElementById('capture-loading');
+    if (show) {
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'capture-loading';
+            el.className = 'capture-loading';
+            el.innerHTML = '<div class="capture-loading-box"><div class="spinner"></div><span>…</span></div>';
+            document.body.appendChild(el);
+        }
+        el.style.display = 'flex';
+    } else if (el) {
+        el.style.display = 'none';
+    }
+}
+
 /**
  * Editor JavaScript - Vista previa en vivo, captura server-side y GIF
  *
@@ -180,14 +196,16 @@ function drawStickerOnCanvas(ctx, width, height) {
 /**
  * Captura SOLO el frame de vídeo (sin sticker) en el canvas oculto
  */
-function captureBaseFrameDataUrl(asJpeg) {
+function captureBaseFrameDataUrl(asJpeg, maxWidth) {
     if (!EditorState.captureCanvas || !EditorState.videoElement) {
         return null;
     }
     let w = EditorState.videoElement.videoWidth || EditorState.captureCanvas.width;
     let h = EditorState.videoElement.videoHeight || EditorState.captureCanvas.height;
-    // Limitar resolución para no reventar post_max_size / memoria
-    const maxW = asJpeg ? 480 : 640;
+    // Limitar resolución (GIF usa PNG pequeño; captura foto puede ir más grande)
+    const maxW = (typeof maxWidth === 'number' && maxWidth > 0)
+        ? maxWidth
+        : (asJpeg ? 480 : 640);
     if (w > maxW) {
         h = Math.round(h * (maxW / w));
         w = maxW;
@@ -355,6 +373,7 @@ function initializeCaptureButton() {
             body.set('sticker_size', String(EditorState.stickerSize));
             body.set('csrf_token', getCsrfToken());
 
+            showCaptureLoading(true);
             const response = await fetch('/editor/capture', {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -371,6 +390,7 @@ function initializeCaptureButton() {
                 return;
             }
             const result = await response.json();
+            showCaptureLoading(false);
 
             if (result.success) {
                 showNotification('¡Foto capturada con éxito!', 'success');
@@ -499,7 +519,9 @@ function startGifRecording() {
 
     let frameCount = 0;
     // Menos frames y JPEG para no superar post_max_size (8M por defecto)
-    const maxFrames = 12;
+    // ~2 segundos de grabación (requisito razonable para el bonus; no fijo en el subject)
+    const maxFrames = 10;
+    const frameMs = 200;
 
     EditorState.gifInterval = setInterval(function () {
         if (frameCount >= maxFrames) {
@@ -507,12 +529,12 @@ function startGifRecording() {
             return;
         }
         // Frame SIN sticker — el servidor aplica el sticker
-        const frameData = captureBaseFrameDataUrl(true);
+        const frameData = captureBaseFrameDataUrl(false, 400);
         if (frameData) {
             EditorState.gifFrames.push(frameData);
             frameCount++;
         }
-    }, 150);
+    }, frameMs);
 }
 
 async function stopGifRecording() {

@@ -297,15 +297,27 @@ class EditorController extends Controller {
      * parece que se mueve). Cada frame es una página del librito.
      */
     public function createGif() {
+        /*
+         * GIF animado (bonus):
+         * - Decodifica cada frame y aplica el sticker con Imagick (JPEG/PNG sin depender de GD).
+         * - Si Imagick no está, intenta el binario "convert".
+         * Así evitamos el error "No JPEG support in this PHP build" de imagecreatefromstring().
+         */
         $this->requireAuth();
 
         if (!$this->isPost() || !$this->validateCSRF()) {
             $this->json(['success' => false, 'message' => 'Invalid request'], 400);
         }
 
+        if (!extension_loaded('imagick') && shell_exec('which convert') === null) {
+            $this->json([
+                'success' => false,
+                'message' => 'ImageMagick is not available (need imagick extension or convert binary)'
+            ], 500);
+        }
+
         $framesData  = json_decode($_POST['frames'] ?? '[]', true);
         $stickerPath = $_POST['sticker'] ?? '';
-        // % del frame (centro del sticker) y tamaño en px — coherente con capture()
         $stickerX    = floatval($_POST['sticker_x'] ?? 50);
         $stickerY    = floatval($_POST['sticker_y'] ?? 50);
         $stickerSize = intval($_POST['sticker_size'] ?? 100);
@@ -322,17 +334,6 @@ class EditorController extends Controller {
             $this->json(['success' => false, 'message' => 'Sticker not found'], 404);
         }
 
-        $sticker = $this->loadImageWithAlpha($stickerFullPath);
-        if ($sticker === false) {
-            $this->json(['success' => false, 'message' => 'Failed to load sticker'], 500);
-        }
-
-        // ---------------------------------------------------------------
-        // Redimensionamos la pegatina al tamaño en píxeles pedido por el cliente
-        // ---------------------------------------------------------------
-        $sticker = $this->resizeStickerToWidth($sticker, max(10, $stickerSize));
-
-        // Aseguramos que existe la carpeta temporal
         $tempDir = $this->tempPath();
         if (!is_dir($tempDir)) {
             mkdir($tempDir, 0775, true);
@@ -340,108 +341,95 @@ class EditorController extends Controller {
 
         $processedFrames = [];
         $tempFiles = [];
-
-        // ---------------------------------------------------------------
-        // Procesamos cada fotograma: decodificamos + aplicamos pegatina
-        // ---------------------------------------------------------------
-        foreach ($framesData as $index => $frameData) {
-            $frameData = preg_replace('/^data:image\/(png|jpeg|jpg);base64,/', '', $frameData);
-            $frameData = str_replace(' ', '+', $frameData);
-            $decodedFrame = base64_decode($frameData);
-            if ($decodedFrame === false) {
-                continue;
-            }
-
-            $frameImage = imagecreatefromstring($decodedFrame);
-            if ($frameImage === false) {
-                continue;
-            }
-
-            // Creamos una nueva imagen del mismo tamaño
-            $finalFrame = imagecreatetruecolor(imagesx($frameImage), imagesy($frameImage));
-            imagealphablending($finalFrame, false);
-            imagesavealpha($finalFrame, true);
-
-            // Copiamos el fotograma original
-            imagecopy($finalFrame, $frameImage, 0, 0, 0, 0, imagesx($frameImage), imagesy($frameImage));
-
-            // Superponemos la pegatina (coordenadas desde % del frame)
-            imagealphablending($finalFrame, true);
-            $fw = imagesx($finalFrame);
-            $fh = imagesy($finalFrame);
-            $sw = imagesx($sticker);
-            $sh = imagesy($sticker);
-            $px = (int)(($stickerX / 100.0) * $fw - $sw / 2);
-            $py = (int)(($stickerY / 100.0) * $fh - $sh / 2);
-            imagecopy($finalFrame, $sticker, $px, $py, 0, 0, $sw, $sh);
-
-            // Guardamos el fotograma procesado en un archivo temporal
-            $tempFilename = $tempDir . '/frame_' . time() . '_' . $index . '_' . bin2hex(random_bytes(4)) . '.png';
-            imagepng($finalFrame, $tempFilename);
-
-            $processedFrames[] = $tempFilename;
-            $tempFiles[] = $tempFilename;
-
-            imagedestroy($frameImage);
-            imagedestroy($finalFrame);
-        }
-
-        imagedestroy($sticker);
-
-        if (count($processedFrames) < 2) {
-            $this->cleanupTemp($tempFiles);
-            $this->json(['success' => false, 'message' => 'Failed to process frames'], 500);
-        }
-
-        // ---------------------------------------------------------------
-        // Creamos el GIF final
-        // ---------------------------------------------------------------
-        $gifFilename = 'gif_' . $_SESSION['user_id'] . '_' . time() . '_' . bin2hex(random_bytes(8)) . '.gif';
-        $gifPath = $this->uploadsPath($gifFilename);
-        $success = false;
         $error = '';
 
-        // Método preferido: extensión Imagick (la más limpia)
-        if (extension_loaded('imagick')) {
-            try {
-                $animation = new Imagick();
-                $animation->setFormat('gif');
+        try {
+            if (!extension_loaded('imagick')) {
+                throw new Exception('imagick extension missing');
+            }
 
-                foreach ($processedFrames as $frame) {
-                    $image = new Imagick($frame);
-                    $image->setImageDelay(10); // 10 = 100 milisegundos
-                    $animation->addImage($image);
-                    $image->clear();
+            $stickerBlob = file_get_contents($stickerFullPath);
+            if ($stickerBlob === false) {
+                throw new Exception('Cannot read sticker file');
+            }
+
+            foreach ($framesData as $index => $frameData) {
+                if (!is_string($frameData) || $frameData === '') {
+                    continue;
                 }
 
-                $animation->setImageIterations(0); // 0 = bucle infinito
-                $animation->writeImages($gifPath, true);
-                $animation->clear();
-                $success = true;
-            } catch (Exception $e) {
-                $error = $e->getMessage();
-            }
-        }
-        // Método de respaldo: comando "convert" de ImageMagick
-        elseif (shell_exec('which convert') !== null) {
-            $framesList = implode(' ', array_map('escapeshellarg', $processedFrames));
-            $command = "convert -delay 10 -loop 0 $framesList " . escapeshellarg($gifPath);
-            exec($command, $output, $returnVar);
-            $success = ($returnVar === 0 && file_exists($gifPath));
-            if (!$success) {
-                $error = 'convert command failed';
-            }
-        } else {
-            $error = 'ImageMagick (imagick extension or convert binary) is not available';
-        }
+                // data:image/png;base64,... o data:image/jpeg;base64,...
+                if (preg_match('/^data:image\/[a-zA-Z0-9+.-]+;base64,/', $frameData)) {
+                    $frameData = preg_replace('/^data:image\/[a-zA-Z0-9+.-]+;base64,/', '', $frameData);
+                }
+                $frameData = str_replace(' ', '+', $frameData);
+                $decoded = base64_decode($frameData, true);
+                if ($decoded === false || $decoded === '') {
+                    continue;
+                }
 
-        // Limpiamos los archivos temporales sí o sí
-        $this->cleanupTemp($tempFiles);
+                $frame = new Imagick();
+                $frame->readImageBlob($decoded);
 
-        if ($success && file_exists($gifPath)) {
+                $fw = $frame->getImageWidth();
+                $fh = $frame->getImageHeight();
+                if ($fw < 1 || $fh < 1) {
+                    $frame->clear();
+                    continue;
+                }
+
+                // Sticker fresco por frame (Imagick muta al redimensionar)
+                $sticker = new Imagick();
+                $sticker->readImageBlob($stickerBlob);
+                $sticker->setImageBackgroundColor(new ImagickPixel('transparent'));
+                $sw = max(10, $stickerSize);
+                $sticker->thumbnailImage($sw, 0);
+
+                $sw = $sticker->getImageWidth();
+                $sh = $sticker->getImageHeight();
+                $px = (int)(($stickerX / 100.0) * $fw - $sw / 2);
+                $py = (int)(($stickerY / 100.0) * $fh - $sh / 2);
+
+                $frame->compositeImage($sticker, Imagick::COMPOSITE_OVER, $px, $py);
+                $sticker->clear();
+
+                $tempFilename = $tempDir . '/frame_' . time() . '_' . $index . '_' . bin2hex(random_bytes(4)) . '.png';
+                $frame->setImageFormat('png');
+                $frame->writeImage($tempFilename);
+                $frame->clear();
+
+                $processedFrames[] = $tempFilename;
+                $tempFiles[] = $tempFilename;
+            }
+
+            if (count($processedFrames) < 2) {
+                $this->cleanupTemp($tempFiles);
+                $this->json(['success' => false, 'message' => 'Failed to process frames (need >= 2 valid frames)'], 400);
+            }
+
+            $gifFilename = 'gif_' . $_SESSION['user_id'] . '_' . time() . '_' . bin2hex(random_bytes(8)) . '.gif';
+            $gifPath = $this->uploadsPath($gifFilename);
+
+            $animation = new Imagick();
+            $animation->setFormat('gif');
+            foreach ($processedFrames as $path) {
+                $img = new Imagick($path);
+                $img->setImageDelay(20); // 20 = 200 ms por frame → ~2 s con 10 frames
+                $animation->addImage($img);
+                $img->clear();
+            }
+            $animation->setImageIterations(0);
+            $animation->writeImages($gifPath, true);
+            $animation->clear();
+
+            $this->cleanupTemp($tempFiles);
+
+            if (!file_exists($gifPath)) {
+                $this->json(['success' => false, 'message' => 'GIF file was not written'], 500);
+            }
+
             $imageModel = $this->model('Image');
             $imageId = $imageModel->create($_SESSION['user_id'], $gifFilename);
-
             if ($imageId) {
                 $this->json([
                     'success'  => true,
@@ -449,25 +437,22 @@ class EditorController extends Controller {
                     'filename' => $gifFilename,
                     'url'      => $this->url('uploads/images/' . $gifFilename)
                 ]);
-            } else {
-                @unlink($gifPath);
-                $this->json(['success' => false, 'message' => 'Failed to save GIF to database'], 500);
             }
-        } else {
+
+            @unlink($gifPath);
+            $this->json(['success' => false, 'message' => 'Failed to save GIF to database'], 500);
+        } catch (Throwable $e) {
+            if (!empty($tempFiles)) {
+                $this->cleanupTemp($tempFiles);
+            }
             $this->json([
                 'success' => false,
-                'message' => 'Failed to create GIF: ' . ($error ?: 'Unknown error')
+                'message' => 'Failed to create GIF: ' . $e->getMessage()
             ], 500);
         }
     }
 
-    // =========================================================================
-    // MÉTODOS PRIVADOS DE AYUDA
-    // =========================================================================
 
-    /**
-     * Devuelve la lista de pegatinas disponibles (archivos .png de /public/stickers)
-     */
     private function getStickers() {
         $stickersDir = $this->publicPath('stickers');
         $stickers = [];
@@ -475,11 +460,18 @@ class EditorController extends Controller {
         if (is_dir($stickersDir)) {
             $files = scandir($stickersDir);
             foreach ($files as $file) {
-                if ($file !== '.' && $file !== '..' && preg_match('/\.png$/i', $file)) {
+                if ($file === '.' || $file === '..') {
+                    continue;
+                }
+                $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                if (in_array($ext, ['png', 'gif', 'jpg', 'jpeg', 'webp'], true)) {
                     $stickers[] = 'stickers/' . $file;
                 }
             }
+            // Orden estable: 00_42 primero, luego el resto alfabético
+            sort($stickers, SORT_STRING);
         }
+
         return $stickers;
     }
 

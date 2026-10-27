@@ -242,11 +242,11 @@ Más detalles en [QUICKSTART.md](QUICKSTART.md).
 
 Proyecto educativo realizado en el marco de [42 School](https://www.42network.org/) – Campus [42 Málaga](https://www.42malaga.com/).
 
+Stickers emoji: [Twemoji](https://github.com/twitter/twemoji) by Twitter/X, CC-BY 4.0.
+
 ---
 
-
----
-
+<br>
 <p align="center">
   <b>Hecho con ❤️ por sternero en 42 Málaga — Octubre 2026</b>
 </p>

@@ -1,15 +1,18 @@
-<?php $title = 'Editor de Fotos'; include __DIR__ . '/../partials/header.php'; ?>
+<?php
+$title = function_exists('__') ? __('editor.title') : 'Editor';
+include __DIR__ . '/../partials/header.php';
+?>
 
+<div class="editor-page">
 <div class="editor-container">
-    <!-- Token CSRF global para captura/GIF (AJAX) -->
     <input type="hidden" id="csrf_token" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
 
-    <h1>Editor de Fotos 📷</h1>
-    <p class="subtitle">Crea tu obra maestra con stickers</p>
+    <h1><?php echo function_exists('__') ? __('editor.title') : 'Editor de Fotos'; ?> 📷</h1>
+    <p class="subtitle"><?php echo function_exists('__') ? __('editor.subtitle') : 'Crea tu obra maestra con stickers'; ?></p>
     
     <div class="editor-tabs">
-        <button class="tab-btn active" data-tab="webcam">📹 Webcam</button>
-        <button class="tab-btn" data-tab="upload">📁 Subir Archivo</button>
+        <button class="tab-btn active" data-tab="webcam">📹 <?php echo function_exists('__') ? __('editor.webcam') : 'Webcam'; ?></button>
+        <button class="tab-btn" data-tab="upload">📁 <?php echo function_exists('__') ? __('editor.upload') : 'Subir Archivo'; ?></button>
     </div>
     
     <!-- Tab: Webcam -->
@@ -23,14 +26,14 @@
 
             <!-- Botones FUERA del contenedor con overflow, siempre visibles -->
             <div class="camera-controls">
-                <button type="button" id="start-camera" class="btn btn-primary">🎥 Iniciar Cámara</button>
-                <button type="button" id="capture-photo" class="btn btn-success" disabled>📸 Capturar Foto</button>
-                <button type="button" id="start-gif" class="btn btn-secondary" disabled>🎬 Grabar GIF</button>
-                <button type="button" id="stop-gif" class="btn btn-danger" disabled style="display:none;">⏹️ Detener GIF</button>
+                <button type="button" id="start-camera" class="btn btn-primary">🎥 <?php echo function_exists('__') ? __('editor.start_camera') : 'Iniciar Cámara'; ?></button>
+                <button type="button" id="capture-photo" class="btn btn-success" disabled>📸 <?php echo function_exists('__') ? __('editor.capture') : 'Capturar Foto'; ?></button>
+                <button type="button" id="start-gif" class="btn btn-secondary" disabled>🎬 <?php echo function_exists('__') ? __('editor.gif') : 'Grabar GIF'; ?></button>
+                <button type="button" id="stop-gif" class="btn btn-danger" disabled style="display:none;">⏹️ <?php echo function_exists('__') ? __('editor.stop_gif') : 'Detener GIF'; ?></button>
             </div>
 
             <div class="sticker-size-control" id="sticker-size-control" style="display:none;">
-                <label>Tamaño del Sticker:</label>
+                <label><?php echo function_exists('__') ? __('editor.sticker_size') : 'Tamaño del Sticker'; ?>:</label>
                 <input type="range" id="sticker-size" min="50" max="200" value="100">
                 <span id="size-value">100px</span>
             </div>
@@ -61,8 +64,8 @@
     
     <!-- Stickers disponibles -->
     <div class="stickers-section">
-        <h3>Stickers Disponibles</h3>
-        <p class="help-text">Haz clic en un sticker y luego arrastra sobre la imagen para posicionarlo</p>
+        <h3><?php echo function_exists('__') ? __('editor.stickers') : 'Stickers Disponibles'; ?></h3>
+        <p class="help-text"><?php echo function_exists('__') ? __('editor.stickers_help') : 'Haz clic en un sticker...'; ?></p>
         
         <div class="stickers-grid">
             <?php foreach ($stickers as $sticker): ?>
@@ -419,4 +422,5 @@
 
 <script src="<?php echo rtrim($_ENV['APP_URL'] ?? 'http://localhost:8080', '/'); ?>/js/editor.js"></script>
 
+</div><!-- .editor-page -->
 <?php include __DIR__ . '/../partials/footer.php'; ?>
