@@ -31,8 +31,8 @@ pause() {
 print_header() {
     clear
     echo -e "${C_B}╭───────────────────────────────────────────────────────────────────╮${C_DF}"
-    echo -e "${C_B}│${C_W}${BOLD}                  EVALUACIÓN DE CAMAGRU                    ${C_DF}${C_B}│${C_DF}"
-    echo -e "${C_B}│${C_DF}                    42 Málaga · 125 % target               ${C_B}│${C_DF}"
+    echo -e "${C_B}│${C_W}${BOLD}                     EVALUACIÓN DE CAMAGRU                         ${C_DF}${C_B}│${C_DF}"
+    echo -e "${C_B}│${C_DF}                    42 Málaga · 125% target                        ${C_B}│${C_DF}"
     echo -e "${C_B}╰───────────────────────────────────────────────────────────────────╯${C_DF}\n"
 }
 
