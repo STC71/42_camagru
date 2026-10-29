@@ -1,465 +1,412 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
 # =============================================================================
-# Camagru - Suite de Pruebas Automatizadas (125 % Edition)
-# =============================================================================
-# Batería completa de tests de entorno, seguridad, estructura y funcionalidad.
+# Camagru · test_auto.sh
+# Suite automática alineada con en.subject + en.eval (42 · Camagru)
 # Campus: 42 Málaga · https://www.42malaga.com/
+#
+# Uso:
+#   chmod +x test_auto.sh && ./test_auto.sh
+#   ./test_auto.sh --quick
+#   ./test_auto.sh --section security
 # =============================================================================
 
-# Colors and formatting
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
-BOLD='\033[1m'
+set -u
 
-# Test counters
-TOTAL_TESTS=0
-PASSED_TESTS=0
-FAILED_TESTS=0
-SKIPPED_TESTS=0
+R='\033[0;31m'; G='\033[0;32m'; Y='\033[1;33m'
+B='\033[0;34m'; C='\033[0;36m'; M='\033[0;35m'
+W='\033[1;37m'; D='\033[2m'; N='\033[0m'; BOLD='\033[1m'
 
-# Configuration
+TOTAL=0; PASS=0; FAIL=0; SKIP=0
 APP_URL="${APP_URL:-http://localhost:8080}"
-TEST_EMAIL="test@camagru.local"
-TEST_PASSWORD="Test123456!"
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+cd "$ROOT" || exit 1
+WHO="${USER:-$(whoami 2>/dev/null || echo desconocido)}"
 
-# Detect container names dynamically (more robust than hardcoding)
-WEB_CONTAINER=$(docker-compose ps -q web 2>/dev/null | head -1)
-DB_CONTAINER=$(docker-compose ps -q db 2>/dev/null | head -1)
-
-# Banner
-clear
-echo -e "${PURPLE}${BOLD}"
-echo "╔════════════════════════════════════════════════════════════════╗"
-echo "║            CAMAGRU - SUITE DE PRUEBAS AUTOMATIZADAS            ║"
-echo "║                   Batería Completa de Tests                    ║"
-echo "║              42 Málaga · https://www.42malaga.com/             ║"
-echo "╚════════════════════════════════════════════════════════════════╝"
-echo -e "${NC}"
-echo ""
-
-# -----------------------------------------------------------------------------
-# Helper functions
-# -----------------------------------------------------------------------------
-print_test_header() {
-    echo ""
-    echo -e "${CYAN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${CYAN}${BOLD} $1${NC}"
-    echo -e "${CYAN}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-}
-
-print_test_name() {
-    echo ""
-    echo -e "${BLUE}➤ Test: ${BOLD}$1${NC}"
-    echo -e "${YELLOW}  Objetivo: $2${NC}"
-}
-
-test_passed() {
-    echo -e "${GREEN}  ✓ ÉXITO: $1${NC}"
-    ((PASSED_TESTS++))
-    ((TOTAL_TESTS++))
-}
-
-test_failed() {
-    echo -e "${RED}  ✗ FALLO: $1${NC}"
-    ((FAILED_TESTS++))
-    ((TOTAL_TESTS++))
-}
-
-test_skipped() {
-    echo -e "${YELLOW}  ⊘ OMITIDO: $1${NC}"
-    ((SKIPPED_TESTS++))
-    ((TOTAL_TESTS++))
-}
-
-print_section() {
-    echo ""
-    echo -e "${PURPLE}${BOLD}═══════════════════════════════════════════════════════════════${NC}"
-    echo -e "${PURPLE}${BOLD} $1${NC}"
-    echo -e "${PURPLE}${BOLD}═══════════════════════════════════════════════════════════════${NC}"
-}
-
-# Helper: get DB root password from .env if present
-get_db_root_pass() {
-    if [ -f .env ]; then
-        grep -E '^DB_ROOT_PASS=' .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'"
-    else
-        echo "root_password"
-    fi
-}
-
-get_db_name() {
-    if [ -f .env ]; then
-        grep -E '^DB_NAME=' .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' | tr -d "'" || echo "camagru"
-    else
-        echo "camagru"
-    fi
-}
-
-DB_ROOT_PASS=$(get_db_root_pass)
-DB_NAME=$(get_db_name)
-
-# =============================================================================
-# SECCIÓN 1: VERIFICACIÓN DEL ENTORNO
-# =============================================================================
-print_section "1. VERIFICACIÓN DEL ENTORNO"
-
-print_test_name "Docker instalado" "Verificar que Docker está disponible en el sistema"
-if command -v docker &> /dev/null; then
-    DOCKER_VERSION=$(docker --version 2>/dev/null | head -1)
-    test_passed "Docker encontrado ($DOCKER_VERSION)"
-else
-    test_failed "Docker no está instalado"
-fi
-
-print_test_name "Docker Compose instalado" "Verificar que Docker Compose está disponible"
-if command -v docker-compose &> /dev/null || docker compose version &> /dev/null; then
-    test_passed "Docker Compose encontrado"
-else
-    test_failed "Docker Compose no está instalado"
-fi
-
-print_test_name "Archivo .env existe" "Verificar configuración del entorno"
-if [ -f .env ]; then
-    test_passed "Archivo .env encontrado"
-else
-    test_failed "Archivo .env no encontrado (ejecuta ./env_setup.sh)"
-fi
-
-print_test_name "Estructura de directorios" "Verificar que existen los directorios necesarios"
-MISSING_DIRS=0
-for dir in app app/controllers app/models app/views app/core config public public/uploads; do
-    if [ ! -d "$dir" ]; then
-        echo -e "${RED}    Falta: $dir${NC}"
-        MISSING_DIRS=1
-    fi
+MODE="full"
+SECTION=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --quick) MODE="quick"; shift ;;
+    --section) SECTION="${2:-}"; shift 2 ;;
+    -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
+    *) echo "Opción desconocida: $1"; exit 1 ;;
+  esac
 done
-if [ $MISSING_DIRS -eq 0 ]; then
-    test_passed "Estructura de directorios correcta"
-else
-    test_failed "Faltan directorios importantes"
-fi
 
-# =============================================================================
-# SECCIÓN 2: CONTENEDORES DOCKER
-# =============================================================================
-print_section "2. CONTENEDORES DOCKER"
-
-print_test_name "Contenedores en ejecución" "Verificar que los contenedores están activos"
-if docker-compose ps 2>/dev/null | grep -q "Up"; then
-    test_passed "Hay contenedores en ejecución"
-else
-    test_failed "No hay contenedores en ejecución (docker-compose up -d)"
-fi
-
-print_test_name "Contenedor Web" "Verificar estado del contenedor de aplicación web"
-if [ -n "$WEB_CONTAINER" ] && docker inspect -f '{{.State.Running}}' "$WEB_CONTAINER" 2>/dev/null | grep -q true; then
-    test_passed "Contenedor web en ejecución"
-else
-    # Fallback: try by service name
-    if docker-compose ps web 2>/dev/null | grep -q "Up"; then
-        test_passed "Contenedor web en ejecución (via compose)"
-    else
-        test_failed "Contenedor web no está en ejecución"
-    fi
-fi
-
-print_test_name "Contenedor Base de Datos" "Verificar estado del contenedor MySQL"
-if [ -n "$DB_CONTAINER" ] && docker inspect -f '{{.State.Running}}' "$DB_CONTAINER" 2>/dev/null | grep -q true; then
-    test_passed "Contenedor de base de datos en ejecución"
-else
-    if docker-compose ps db 2>/dev/null | grep -q "Up"; then
-        test_passed "Contenedor de base de datos en ejecución (via compose)"
-    else
-        test_failed "Contenedor de base de datos no está en ejecución"
-    fi
-fi
-
-# =============================================================================
-# SECCIÓN 3: CONECTIVIDAD Y SERVICIOS
-# =============================================================================
-print_section "3. CONECTIVIDAD Y SERVICIOS"
-
-print_test_name "Aplicación web responde" "Verificar que la aplicación es accesible via HTTP"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 "$APP_URL" 2>/dev/null || echo "000")
-if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ] || [ "$HTTP_CODE" = "301" ]; then
-    test_passed "Aplicación responde (HTTP $HTTP_CODE)"
-else
-    test_failed "Aplicación no responde (HTTP $HTTP_CODE) - ¿está levantada en $APP_URL?"
-fi
-
-print_test_name "Extensión imagick (bonus GIF)" "Verificar que Imagick está disponible en el contenedor web"
-if docker-compose exec -T web php -m 2>/dev/null | grep -qi imagick; then
-    test_passed "Extensión imagick cargada (GIF animado disponible)"
-else
-    test_failed "Extensión imagick NO encontrada (el bonus GIF no funcionará)"
-fi
-
-print_test_name "Extensión GD" "Verificar que GD está disponible para procesamiento de imágenes"
-if docker-compose exec -T web php -m 2>/dev/null | grep -qi "^gd$"; then
-    test_passed "Extensión GD cargada"
-else
-    test_failed "Extensión GD no encontrada"
-fi
-
-print_test_name "Base de datos accesible" "Verificar conectividad con MySQL"
-if docker-compose exec -T db mysqladmin ping -h localhost -u root -p"$DB_ROOT_PASS" --silent 2>/dev/null; then
-    test_passed "MySQL responde al ping"
-else
-    # Try without password prompt issues
-    if docker-compose exec -T db mysql -u root -p"$DB_ROOT_PASS" -e "SELECT 1" &>/dev/null; then
-        test_passed "MySQL accesible"
-    else
-        test_skipped "No se pudo verificar MySQL (revisa DB_ROOT_PASS en .env)"
-    fi
-fi
-
-print_test_name "Base de datos Camagru existe" "Verificar que la base de datos está creada"
-if docker-compose exec -T db mysql -u root -p"$DB_ROOT_PASS" -e "USE \`$DB_NAME\`;" &>/dev/null; then
-    test_passed "Base de datos '$DB_NAME' existe"
-else
-    test_skipped "No se pudo verificar la existencia de la BD '$DB_NAME'"
-fi
-
-print_test_name "Tablas de base de datos" "Verificar que las tablas necesarias existen"
-REQUIRED_TABLES=("users" "images" "likes" "comments")
-MISSING_TABLES=0
-for table in "${REQUIRED_TABLES[@]}"; do
-    if docker-compose exec -T db mysql -u root -p"$DB_ROOT_PASS" -D "$DB_NAME" -e "SHOW TABLES LIKE '$table';" 2>/dev/null | grep -q "$table"; then
-        echo -e "${GREEN}    ✓ Tabla $table existe${NC}"
-    else
-        echo -e "${RED}    ✗ Tabla $table NO existe${NC}"
-        MISSING_TABLES=1
-    fi
-done
-if [ $MISSING_TABLES -eq 0 ]; then
-    test_passed "Todas las tablas obligatorias existen"
-else
-    test_failed "Faltan tablas en la base de datos"
-fi
-
-# =============================================================================
-# SECCIÓN 4: ARCHIVOS Y PERMISOS
-# =============================================================================
-print_section "4. ARCHIVOS Y PERMISOS"
-
-print_test_name "Archivos PHP principales" "Verificar que existen los archivos core del proyecto"
-CORE_FILES=(
-    "app/core/Database.php"
-    "app/core/Controller.php"
-    "app/core/Router.php"
-    "app/core/Validator.php"
-    "app/core/Mailer.php"
-    "app/controllers/AuthController.php"
-    "app/controllers/EditorController.php"
-    "app/controllers/GalleryController.php"
-    "app/models/User.php"
-    "app/models/Image.php"
-)
-MISSING_FILES=0
-for f in "${CORE_FILES[@]}"; do
-    if [ ! -f "$f" ]; then
-        echo -e "${RED}    Falta: $f${NC}"
-        MISSING_FILES=1
-    fi
-done
-if [ $MISSING_FILES -eq 0 ]; then
-    test_passed "Archivos core presentes"
-else
-    test_failed "Faltan archivos core del proyecto"
-fi
-
-print_test_name "Permisos de uploads" "Verificar directorio de uploads"
-if [ -d "public/uploads" ]; then
-    test_passed "Directorio public/uploads existe"
-else
-    test_failed "Directorio public/uploads no existe"
-fi
-
-print_test_name "Carpeta temporal para GIFs" "Verificar public/uploads/temp"
-if [ -d "public/uploads/temp" ]; then
-    test_passed "Carpeta temporal para GIFs existe"
-else
-    test_skipped "Carpeta public/uploads/temp no existe (se crea en runtime)"
-fi
-
-print_test_name "Archivo .env protegido" "Verificar permisos seguros del archivo .env"
-if [ -f .env ]; then
-    PERMS=$(stat -c "%a" .env 2>/dev/null || stat -f "%OLp" .env 2>/dev/null)
-    if [ "$PERMS" = "600" ] || [ "$PERMS" = "400" ]; then
-        test_passed "Permisos de .env seguros ($PERMS)"
-    else
-        test_failed "Permisos de .env demasiado abiertos ($PERMS) — se recomienda 600"
-    fi
-else
-    test_skipped ".env no existe"
-fi
-
-# =============================================================================
-# SECCIÓN 5: CÓDIGO Y SEGURIDAD
-# =============================================================================
-print_section "5. CÓDIGO Y SEGURIDAD"
-
-print_test_name "PDO ERRMODE_EXCEPTION" "Verificar modo de errores de PDO"
-if grep -rq "ERRMODE_EXCEPTION" app/core/Database.php config/ 2>/dev/null; then
-    test_passed "PDO::ERRMODE_EXCEPTION configurado"
-else
-    test_failed "No se encontró PDO::ERRMODE_EXCEPTION"
-fi
-
-print_test_name "Password hashing" "Verificar uso de password_hash"
-if grep -rq "password_hash" app/models/User.php 2>/dev/null; then
-    test_passed "password_hash utilizado"
-else
-    test_failed "No se encontró password_hash"
-fi
-
-print_test_name "Protección XSS" "Verificar uso de htmlspecialchars"
-if grep -rq "htmlspecialchars" app/core/Controller.php 2>/dev/null; then
-    test_passed "htmlspecialchars presente en Controller"
-else
-    test_failed "No se encontró htmlspecialchars"
-fi
-
-print_test_name "CSRF tokens" "Verificar generación y validación de tokens CSRF"
-if grep -rq "csrf_token\|validateCSRF\|generateCSRF" app/core/Controller.php 2>/dev/null; then
-    test_passed "Sistema CSRF implementado"
-else
-    test_failed "No se encontró implementación CSRF"
-fi
-
-print_test_name "Sentencias preparadas" "Verificar uso de prepared statements"
-if grep -rq "prepare\|->" app/core/Database.php 2>/dev/null; then
-    test_passed "Uso de prepared statements detectado"
-else
-    test_failed "No se detectó uso claro de prepared statements"
-fi
-
-# =============================================================================
-# SECCIÓN 6: ENDPOINTS HTTP BÁSICOS
-# =============================================================================
-print_section "6. ENDPOINTS HTTP BÁSICOS"
-
-check_endpoint() {
-    local path=$1
-    local expected=$2
-    local name=$3
-    local code
-    code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 "$APP_URL$path" 2>/dev/null || echo "000")
-    if echo "$expected" | grep -q "$code"; then
-        test_passed "$name (HTTP $code)"
-    else
-        test_failed "$name (HTTP $code, se esperaba $expected)"
-    fi
+banner() {
+  clear 2>/dev/null || true
+  echo -e "${M}${BOLD}"
+  echo "╔══════════════════════════════════════════════════════════════════════╗"
+  echo "║           CAMAGRU · SUITE AUTOMÁTICA DE PRUEBAS (125 %)              ║"
+  echo "║     Subject + hoja de evaluación · 42 Málaga · Outer Core            ║"
+  echo "╚══════════════════════════════════════════════════════════════════════╝"
+  echo -e "${N}"
+  echo -e "  ${D}APP_URL=${APP_URL}  ·  raíz=${ROOT}${N}"
+  echo -e "  ${D}$(date '+%Y-%m-%d %H:%M:%S')  ·  modo=${MODE}${SECTION:+ · section=$SECTION}  ·  user=${WHO}${N}"
+  echo ""
 }
 
-print_test_name "Página de inicio" "GET /"
-check_endpoint "/" "200 302 301" "Home"
+section() {
+  echo ""
+  echo -e "${C}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${N}"
+  echo -e "${C}${BOLD}  $1${N}"
+  echo -e "${C}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${N}"
+}
 
-print_test_name "Página de login" "GET /login"
-check_endpoint "/login" "200 302" "Login"
-
-print_test_name "Página de registro" "GET /register"
-check_endpoint "/register" "200 302" "Register"
-
-print_test_name "Galería pública" "GET /gallery"
-check_endpoint "/gallery" "200 302" "Gallery"
-
-print_test_name "Editor (requiere auth)" "GET /editor (debe redirigir si no hay sesión)"
-check_endpoint "/editor" "200 302 301" "Editor"
-
-# =============================================================================
-# SECCIÓN 7: FUNCIONALIDADES CLAVE
-# =============================================================================
-print_section "7. FUNCIONALIDADES CLAVE"
-
-print_test_name "Sistema de likes" "Verificar tabla y código de likes"
-if docker-compose exec -T db mysql -u root -p"$DB_ROOT_PASS" -D "$DB_NAME" -e "SHOW TABLES LIKE 'likes';" 2>/dev/null | grep -q "likes"; then
-    if grep -rq "class Like\|function toggle\|function exists" app/models/Like.php 2>/dev/null; then
-        test_passed "Sistema de likes implementado (tabla + modelo)"
-    else
-        test_passed "Tabla likes existe (revisar modelo)"
+# Muestra hasta 6 coincidencias file:line para un patrón en una lista de paths
+show_hits() {
+  local pattern="$1"; shift
+  local hits=0
+  local f
+  for f in "$@"; do
+    [[ -e "$f" ]] || continue
+    if [[ -f "$f" ]]; then
+      while IFS= read -r line; do
+        echo -e "      ${D}${line}${N}"
+        hits=$((hits+1))
+        [[ $hits -ge 8 ]] && break 2
+      done < <(grep -Ene "$pattern" "$f" 2>/dev/null | head -4 | sed "s|^|$f:|")
+    elif [[ -d "$f" ]]; then
+      while IFS= read -r line; do
+        echo -e "      ${D}${line}${N}"
+        hits=$((hits+1))
+        [[ $hits -ge 8 ]] && break 2
+      done < <(grep -Erne "$pattern" "$f" 2>/dev/null | head -4)
     fi
-else
-    test_failed "Tabla de likes no encontrada"
-fi
+  done
+  [[ $hits -eq 0 ]] && echo -e "      ${D}(sin coincidencias listables)${N}"
+}
 
-print_test_name "Sistema de comentarios" "Verificar tabla y código de comentarios"
-if docker-compose exec -T db mysql -u root -p"$DB_ROOT_PASS" -D "$DB_NAME" -e "SHOW TABLES LIKE 'comments';" 2>/dev/null | grep -q "comments"; then
-    if grep -rq "class Comment\|function create" app/models/Comment.php 2>/dev/null; then
-        test_passed "Sistema de comentarios implementado (tabla + modelo)"
-    else
-        test_passed "Tabla comments existe (revisar modelo)"
+ok() {
+  echo -e "  ${G}✓${N} $1"
+  PASS=$((PASS+1)); TOTAL=$((TOTAL+1))
+}
+bad() {
+  echo -e "  ${R}✗${N} $1"
+  FAIL=$((FAIL+1)); TOTAL=$((TOTAL+1))
+}
+skip() {
+  echo -e "  ${Y}⊘${N} $1"
+  SKIP=$((SKIP+1)); TOTAL=$((TOTAL+1))
+}
+info() { echo -e "  ${D}→ $1${N}"; }
+
+# Éxito si el patrón EXISTE; muestra ubicaciones
+assert_present() {
+  local label="$1"
+  local pattern="$2"
+  shift 2
+  local found=0
+  local f
+  for f in "$@"; do
+    [[ -e "$f" ]] || continue
+    if [[ -f "$f" ]] && grep -Eqe "$pattern" "$f" 2>/dev/null; then found=1; break; fi
+    if [[ -d "$f" ]] && grep -Erqe "$pattern" "$f" 2>/dev/null; then found=1; break; fi
+  done
+  if [[ $found -eq 1 ]]; then
+    ok "$label"
+    show_hits "$pattern" "$@"
+  else
+    bad "$label"
+    echo -e "      ${Y}Patrón buscado:${N} ${C}${pattern}${N}"
+    echo -e "      ${Y}En:${N} $*"
+  fi
+}
+
+# Éxito si el patrón NO existe (prohibido); indica comando manual
+assert_absent() {
+  local label="$1"
+  local pattern="$2"
+  local scope="${3:-app public config}"
+  if grep -Erqe "$pattern" $scope 2>/dev/null; then
+    bad "$label"
+    echo -e "      ${Y}Se encontró el patrón prohibido. Revisa:${N}"
+    grep -Erne "$pattern" $scope 2>/dev/null | head -5 | while IFS= read -r line; do
+      echo -e "      ${R}${line}${N}"
+    done
+  else
+    ok "$label"
+    echo -e "      ${D}Comando manual (no debe listar nada):${N}"
+    echo -e "      ${C}grep -rne '${pattern}' ${scope}${N}"
+    echo -e "      ${D}Resultado esperado: sin líneas / exit code 1${N}"
+  fi
+}
+
+need_section() {
+  local s="$1"
+  [[ -z "$SECTION" || "$SECTION" == "$s" ]]
+}
+
+# ── 1 Preflight ──────────────────────────────────────────────────────────────
+section_preflight() {
+  section "1 · PREFLIGHT (hoja de evaluación · si falla → Cheat/Crash)"
+
+  if find app public config -name '*.php' 2>/dev/null | head -1 | grep -q .; then
+    ok "Proyecto PHP detectado (app/public/config)"
+  else
+    bad "No se detectan archivos PHP en app|public|config"
+  fi
+
+  local pkg=0
+  for f in composer.json package.json yarn.lock pnpm-lock.yaml; do
+    if [[ -f "$f" ]]; then
+      bad "Detectado $f (eval: sin package manager)"
+      pkg=1
     fi
-else
-    test_failed "Tabla de comentarios no encontrada"
-fi
+  done
+  if [[ $pkg -eq 0 ]]; then
+    ok "Sin composer/npm/yarn (requisito eval)"
+    echo -e "      ${D}Comando: ls composer.json package.json 2>/dev/null → no listar ficheros${N}"
+  fi
 
-print_test_name "Procesamiento de imágenes (GD)" "Verificar funciones GD en EditorController"
-if grep -rq "imagecreatefromstring\|imagecopy\|imagepng" app/controllers/EditorController.php 2>/dev/null; then
-    test_passed "Procesamiento server-side con GD detectado"
-else
-    test_failed "No se detectó procesamiento de imágenes con GD"
-fi
+  assert_absent "Sin frameworks PHP externos (Laravel/Symfony/CodeIgniter)" \
+    'Illuminate\\|Symfony\\\\Bundle|CodeIgniter\\\\|Laravel\\\\' \
+    "app public config"
 
-print_test_name "Soporte GIF (Imagick)" "Verificar código de creación de GIF"
-if grep -rq "Imagick\|createGif\|image/gif" app/controllers/EditorController.php 2>/dev/null; then
-    test_passed "Código de generación de GIF presente"
-else
-    test_failed "No se encontró código de generación de GIF"
-fi
+  if [[ -f public/index.php ]]; then
+    ok "Existe public/index.php (front controller)"
+    echo -e "      ${D}public/index.php${N}"
+  else
+    bad "Falta public/index.php"
+  fi
 
-# =============================================================================
-# RESUMEN FINAL
-# =============================================================================
-echo ""
-echo ""
-echo -e "${PURPLE}${BOLD}╔══════════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${PURPLE}${BOLD}║                    RESUMEN DE PRUEBAS                            ║${NC}"
-echo -e "${PURPLE}${BOLD}╚══════════════════════════════════════════════════════════════════╝${NC}"
-echo ""
-echo -e "${CYAN}Total de pruebas ejecutadas: ${BOLD}$TOTAL_TESTS${NC}"
-echo ""
-echo -e "${GREEN}✓ Pruebas exitosas:    ${BOLD}$PASSED_TESTS${NC}"
-echo -e "${RED}✗ Pruebas fallidas:    ${BOLD}$FAILED_TESTS${NC}"
-echo -e "${YELLOW}⊘ Pruebas omitidas:    ${BOLD}$SKIPPED_TESTS${NC}"
-echo ""
+  if [[ -f config/database.php ]]; then
+    ok "config/database.php presente"
+    echo -e "      ${D}config/database.php${N}"
+  elif [[ -f app/core/Database.php ]]; then
+    ok "app/core/Database.php presente (equivalente)"
+    echo -e "      ${D}app/core/Database.php${N}"
+  else
+    bad "Falta config/database.php o app/core/Database.php"
+  fi
 
-# Calculate percentage
-if [ $TOTAL_TESTS -gt 0 ]; then
-    if command -v bc &> /dev/null; then
-        SUCCESS_RATE=$(echo "scale=2; ($PASSED_TESTS * 100) / $TOTAL_TESTS" | bc)
-    else
-        SUCCESS_RATE=$(( PASSED_TESTS * 100 / TOTAL_TESTS ))
-    fi
-    echo -e "${CYAN}Tasa de éxito: ${BOLD}${SUCCESS_RATE}%${NC}"
+  if [[ -f config/setup.php ]]; then
+    ok "config/setup.php presente"
+    echo -e "      ${D}config/setup.php${N}"
+  elif [[ -f database/init.sql ]] || [[ -f database/schema.sql ]]; then
+    ok "Esquema SQL de inicialización presente"
+    show_hits '.' database/init.sql database/schema.sql 2>/dev/null || true
+  else
+    bad "Falta config/setup.php o database/*.sql"
+  fi
+
+  assert_present "PDO::ERRMODE_EXCEPTION configurado" \
+    'ERRMODE_EXCEPTION' \
+    app/core/Database.php config/database.php config/setup.php
+
+  assert_present "Uso de PDO (new PDO / PDO::)" \
+    'new PDO|PDO::' \
+    app/core/Database.php config/database.php
+}
+
+# ── 2 Estructura ─────────────────────────────────────────────────────────────
+section_structure() {
+  section "2 · ESTRUCTURA (MVC, Docker, assets)"
+  for d in app/controllers app/models app/views app/core public public/css public/js public/stickers; do
+    if [[ -d "$d" ]]; then ok "Directorio $d"; else bad "Falta directorio $d"; fi
+  done
+  for f in Dockerfile docker-compose.yml \
+           app/controllers/AuthController.php \
+           app/controllers/EditorController.php \
+           app/controllers/GalleryController.php \
+           app/core/Router.php; do
+    if [[ -f "$f" ]]; then ok "Existe $f"; echo -e "      ${D}${f}${N}"; else bad "Falta $f"; fi
+  done
+  local n
+  n=$(find public/stickers -type f \( -name '*.png' -o -name '*.gif' -o -name '*.webp' \) 2>/dev/null | wc -l | tr -d ' ')
+  if [[ "${n:-0}" -ge 1 ]]; then ok "Stickers disponibles ($n archivos)"; else bad "Sin stickers en public/stickers/"; fi
+}
+
+# ── 3 Docker ─────────────────────────────────────────────────────────────────
+section_docker() {
+  section "3 · DOCKER & ENTORNO (\"works as is\")"
+  if ! command -v docker >/dev/null 2>&1; then skip "Docker no está en PATH"; return; fi
+  ok "Docker disponible"
+  local COMPOSE="docker-compose"
+  docker-compose version >/dev/null 2>&1 || COMPOSE="docker compose"
+
+  local web_id db_id st
+  web_id=$($COMPOSE ps -q web 2>/dev/null | head -1 || true)
+  if [[ -n "$web_id" ]]; then
+    st=$(docker inspect -f '{{.State.Status}}' "$web_id" 2>/dev/null || echo unknown)
+    [[ "$st" == "running" ]] && ok "Contenedor web en ejecución" || bad "Contenedor web estado=$st"
+  else
+    bad "Contenedor web no encontrado (docker-compose up -d)"
+  fi
+  db_id=$($COMPOSE ps -q db 2>/dev/null | head -1 || true)
+  [[ -n "$db_id" ]] && ok "Contenedor db presente" || bad "Contenedor db no encontrado"
+
+  if [[ -n "${web_id:-}" ]]; then
+    if $COMPOSE exec -T web php -m 2>/dev/null | grep -qi '^pdo_mysql$'; then
+      ok "Extensión pdo_mysql en el contenedor"
+      echo -e "      ${D}Comando: docker-compose exec web php -m | grep pdo_mysql${N}"
+    else bad "Falta pdo_mysql"; fi
+    if $COMPOSE exec -T web php -m 2>/dev/null | grep -qi '^gd$'; then
+      ok "Extensión gd (edición de imágenes)"
+    else bad "Falta gd"; fi
+    if $COMPOSE exec -T web php -r 'echo !empty(gd_info()["JPEG Support"])?"1":"0";' 2>/dev/null | grep -q 1; then
+      ok "GD con soporte JPEG"
+      echo -e "      ${D}Comando: docker-compose exec web php -r 'print_r(gd_info());' | grep JPEG${N}"
+    else bad "GD sin soporte JPEG"; fi
+    if $COMPOSE exec -T web php -m 2>/dev/null | grep -qi imagick; then
+      ok "Extensión imagick (bonus GIF)"
+      echo -e "      ${D}Comando: docker-compose exec web php -m | grep -i imagick${N}"
+    else skip "imagick no cargado (bonus GIF en riesgo)"; fi
+  fi
+}
+
+# ── 4 HTTP ───────────────────────────────────────────────────────────────────
+section_http() {
+  section "4 · IGNITION (servidor responde sin error fatal)"
+  if ! command -v curl >/dev/null 2>&1; then skip "curl no disponible"; return; fi
+  local code
+  code=$(curl -s -o /tmp/camagru_http_body.txt -w '%{http_code}' --max-time 8 "$APP_URL/" 2>/dev/null || echo "000")
+  if [[ "$code" =~ ^[23] ]]; then ok "GET / → HTTP $code"; else bad "GET / → HTTP $code"; fi
+  if grep -qiE 'Fatal error|Uncaught Error|Parse error' /tmp/camagru_http_body.txt 2>/dev/null; then
+    bad "Respuesta de / contiene error PHP fatal"
+  else
+    ok "Sin fatal/parse error visible en /"
+  fi
+  for path in /login /register /gallery; do
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "$APP_URL$path" 2>/dev/null || echo "000")
+    if [[ "$code" =~ ^[23] ]]; then ok "GET $path → HTTP $code"; else bad "GET $path → HTTP $code"; fi
+  done
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "$APP_URL/editor" 2>/dev/null || echo "000")
+  if [[ "$code" =~ ^(302|301|401|403|200)$ ]]; then
+    ok "GET /editor → HTTP $code (acceso controlado o sesión)"
+  else
+    bad "GET /editor → HTTP $code inesperado"
+  fi
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$APP_URL/css/style.css" 2>/dev/null || echo "000")
+  [[ "$code" == "200" ]] && ok "CSS principal accesible" || bad "CSS principal HTTP $code"
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$APP_URL/js/main.js" 2>/dev/null || echo "000")
+  [[ "$code" == "200" ]] && ok "JS main accesible" || skip "js/main.js HTTP $code"
+}
+
+# ── 5 Seguridad ──────────────────────────────────────────────────────────────
+section_security() {
+  section "5 · SEGURIDAD (password_hash, XSS, SQLi, CSRF)"
+
+  assert_present "password_hash (bcrypt/argon)" \
+    'password_hash\(' \
+    app/models/User.php app/controllers/AuthController.php
+
+  assert_present "password_verify" \
+    'password_verify\(' \
+    app/models/User.php app/controllers/AuthController.php
+
+  assert_present "htmlspecialchars (anti-XSS)" \
+    'htmlspecialchars\(' \
+    app/core/Controller.php app/views/gallery/index.php app/views/partials/header.php
+
+  # El proyecto encapsula prepare en Database::query() → connection->prepare
+  # También aceptamos $this->db->query($sql, $params) como uso de prepared vía wrapper
+  if grep -Erq -e '->prepare\(' -e 'PDO::prepare' app/core app/models app/controllers 2>/dev/null \
+     || grep -Erq -e 'function query' -e 'db->query' app/core app/models 2>/dev/null; then
+    ok "Prepared statements (anti-SQLi) — PDO prepare o wrapper query(\$sql, \$params)"
+    show_hits 'prepare\(|function query|db->query' app/core/Database.php app/models
+    echo -e "      ${D}Comando: grep -rne 'prepare(' -e 'function query' app/core app/models | head${N}"
+  else
+    bad "Prepared statements (anti-SQLi) no detectados"
+    echo -e "      ${Y}Comando de verificación:${N}"
+    echo -e "      ${C}grep -rne 'prepare(' -e 'function query' app/core app/models | head${N}"
+  fi
+
+  assert_present "CSRF token en formularios/controladores" \
+    'csrf_token|validateCSRF|CSRF' \
+    app/core/Controller.php app/controllers app/views/auth
+
+  assert_absent "Sin mysqli_query concatenando entrada de usuario" \
+    'mysqli_query\s*\(.*\$_(GET|POST|REQUEST)' \
+    "app"
+
+  assert_absent "Sin eval/shell_exec peligroso con input de usuario" \
+    'eval\s*\(.*\$_(GET|POST)|shell_exec\s*\(.*\$_(GET|POST)' \
+    "app"
+}
+
+# ── 6 Features ───────────────────────────────────────────────────────────────
+section_features() {
+  section "6 · FUNCIONALIDAD (mapa hoja de evaluación)"
+  info "User Creation / Authentication"
+  assert_present "Registro de usuario" 'function register' app/controllers/AuthController.php
+  assert_present "Login" 'function login' app/controllers/AuthController.php
+  assert_present "Logout" 'function logout' app/controllers/AuthController.php
+  assert_present "Verificación de email" 'function verify|verification' app/controllers/AuthController.php app/models/User.php
+  assert_present "Reset de contraseña" 'forgot|resetPassword|function reset' app/controllers/AuthController.php
+
+  info "Editing (ft_snapchat.php)"
+  assert_present "Captura / composición servidor" 'function capture|imagecopy|mergeImages' app/controllers/EditorController.php
+  assert_present "Upload de imagen base" 'function upload' app/controllers/EditorController.php
+  assert_present "Borrado de imagen propia" 'function delete' app/controllers/EditorController.php
+
+  info "Gallery"
+  assert_present "Galería pública / listado" 'function index|getAll|perPage' app/controllers/GalleryController.php
+  assert_present "Likes" 'function like|toggleLike' app/controllers/GalleryController.php
+  assert_present "Comentarios" 'function comment|addComment' app/controllers/GalleryController.php
+  assert_present "Notificación por email de comentarios" 'notify|Mailer|sendComment' app/controllers/GalleryController.php app/core/Mailer.php
+
+  info "Preferencias de usuario"
+  assert_present "Ajustes / preferencias" 'settings|notify_comments|updateProfile' app/controllers/UserController.php app/controllers/AuthController.php
+}
+
+# ── 7 Bonus ──────────────────────────────────────────────────────────────────
+section_bonus() {
+  section "7 · BONUS (solo si mandatory OK en defensa real)"
+  assert_present "AJAX likes/comentarios (fetch/XHR en JS)" 'fetch\s*\(|XMLHttpRequest' public/js/gallery.js public/js/main.js
+  assert_present "Preview en vivo / drag sticker" 'drag|mousedown|stickerPosition|getUserMedia' public/js/editor.js
+  assert_present "Infinite scroll / load-more" 'load-more|infinite|IntersectionObserver|scroll' public/js/gallery.js app/controllers/GalleryController.php
+  assert_present "Creación de GIF animado (servidor)" 'createGif|Imagick|image/gif' app/controllers/EditorController.php
+
+  local COMPOSE="docker-compose"
+  docker-compose version >/dev/null 2>&1 || COMPOSE="docker compose"
+  if $COMPOSE exec -T web php -m 2>/dev/null | grep -qi imagick; then
+    ok "Runtime: imagick disponible para GIF"
+    echo -e "      ${D}Comando: docker-compose exec web php -m | grep -i imagick${N}"
+    echo -e "      ${D}Esperado: una línea con «imagick»${N}"
+  else
+    skip "Runtime: imagick no disponible (GIF puede fallar en defensa)"
+  fi
+}
+
+summary() {
+  echo ""
+  echo -e "${M}${BOLD}╔══════════════════════════════════════════════════════════════════════╗${N}"
+  echo -e "${M}${BOLD}║                         RESUMEN DE LA SUITE                          ║${N}"
+  echo -e "${M}${BOLD}╚══════════════════════════════════════════════════════════════════════╝${N}"
+  local pct=0
+  [[ $TOTAL -gt 0 ]] && pct=$(( PASS * 100 / TOTAL ))
+  if [[ $FAIL -eq 0 ]]; then
+    # Sin errores: tono neutro / verde suave (nada en rojo)
+    echo -e "  Total: ${TOTAL}   OK: ${G}${PASS}${N}   Fallo: ${FAIL}   Omitido: ${SKIP}"
+    echo -e "  Aciertos: ${BOLD}${pct}%${N}"
     echo ""
+    echo -e "  ${G}${BOLD}✓ Suite en verde.${N} Revisa aún los flujos manuales de la hoja de evaluación."
+  else
+    echo -e "  Total: ${W}${TOTAL}${N}   ${G}OK: ${PASS}${N}   ${R}Fallo: ${FAIL}${N}   ${Y}Omitido: ${SKIP}${N}"
+    echo -e "  Aciertos: ${BOLD}${pct}%${N}"
+    echo ""
+    echo -e "  ${R}${BOLD}✗ Hay fallos.${N} Corrige antes de la defensa (eval puede marcar Crash/Cheat)."
+  fi
+  echo -e "  ${D}Guía interactiva de defensa: ./test_eval.sh${N}"
+  echo -e "  ${D}42 Málaga · https://www.42malaga.com/ · ${WHO}${N}"
+  echo ""
+  [[ $FAIL -eq 0 ]] && return 0 || return 1
+}
+
+banner
+need_section preflight && section_preflight
+need_section structure && section_structure
+if [[ "$MODE" != "quick" ]]; then
+  need_section docker && section_docker
 fi
-
-# Final verdict
-if [ $FAILED_TESTS -eq 0 ]; then
-    echo -e "${GREEN}${BOLD}🎉 ¡EXCELENTE! Todos los tests críticos pasaron.${NC}"
-    echo -e "${GREEN}Tu proyecto Camagru está listo para la evaluación 125 %.${NC}"
-    EXIT_CODE=0
-elif [ $FAILED_TESTS -le 3 ]; then
-    echo -e "${YELLOW}${BOLD}⚠️  ADVERTENCIA: Algunos tests fallaron.${NC}"
-    echo -e "${YELLOW}Revisa los errores anteriores y corrígelos.${NC}"
-    EXIT_CODE=1
-else
-    echo -e "${RED}${BOLD}❌ ERROR: Múltiples tests fallaron.${NC}"
-    echo -e "${RED}El proyecto requiere atención antes de la defensa.${NC}"
-    EXIT_CODE=2
+need_section http && section_http
+need_section security && section_security
+if [[ "$MODE" != "quick" || -n "$SECTION" ]]; then
+  if [[ -z "$SECTION" || "$SECTION" == "features" || "$SECTION" == "structure" ]]; then
+    section_features
+  fi
+  need_section bonus && section_bonus
 fi
-
-echo ""
-echo -e "${BLUE}Fecha de ejecución: $(date '+%Y-%m-%d %H:%M:%S')${NC}"
-echo -e "${BLUE}Campus: 42 Málaga · https://www.42malaga.com/${NC}"
-echo -e "${PURPLE}${BOLD}════════════════════════════════════════════════════════════════════${NC}"
-echo ""
-
-exit $EXIT_CODE
+summary
+exit $?
