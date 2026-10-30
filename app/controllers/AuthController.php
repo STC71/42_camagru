@@ -32,7 +32,7 @@ class AuthController extends Controller {
         if ($this->isPost()) {
             // Protección CSRF: comprobamos que la petición viene de nuestro formulario
             if (!$this->validateCSRF()) {
-                $_SESSION['flash_error'] = 'Invalid request. Please try again.';
+                $_SESSION['flash_error'] = function_exists('__') ? __('flash.invalid_request') : 'Invalid request. Please try again.';
                 $this->redirect('login');
             }
 
@@ -51,17 +51,17 @@ class AuthController extends Controller {
             if ($user && $userModel->verifyPassword($password, $user['password'])) {
                 // El usuario debe haber confirmado su email antes de poder entrar
                 if (!$user['verified']) {
-                    $_SESSION['flash_error'] = 'Please verify your email before logging in.';
+                    $_SESSION['flash_error'] = function_exists('__') ? __('flash.verify_email') : 'Please verify your email before logging in.';
                     $this->redirect('login');
                 }
 
                 // ¡Login correcto! Guardamos los datos en la sesión
                 $_SESSION['user_id']   = $user['id'];
                 $_SESSION['username']  = $user['username'];
-                $_SESSION['flash_success'] = 'Welcome back, ' . $user['username'] . '!';
+                $_SESSION['flash_success'] = function_exists('__') ? str_replace('{name}', $user['username'], __('flash.welcome_back')) : ('Welcome back, ' . $user['username'] . '!');
                 $this->redirect('home');
             } else {
-                $_SESSION['flash_error'] = 'Invalid username or password.';
+                $_SESSION['flash_error'] = function_exists('__') ? __('flash.invalid_credentials') : 'Invalid username or password.';
                 $this->redirect('login');
             }
         }
@@ -84,7 +84,7 @@ class AuthController extends Controller {
 
         if ($this->isPost()) {
             if (!$this->validateCSRF()) {
-                $_SESSION['flash_error'] = 'Invalid request. Please try again.';
+                $_SESSION['flash_error'] = function_exists('__') ? __('flash.invalid_request') : 'Invalid request. Please try again.';
                 $this->redirect('register');
             }
 
@@ -136,7 +136,7 @@ class AuthController extends Controller {
                 if ($token) {
                     // Enviamos el email de verificación
                     Mailer::sendVerificationEmail($email, $username, $token);
-                    $_SESSION['flash_success'] = 'Registration successful! Please check your email to verify your account.';
+                    $_SESSION['flash_success'] = function_exists('__') ? __('flash.register_ok') : 'Registration successful! Please check your email to verify your account.';
                     $this->redirect('login');
                 } else {
                     $errors[] = 'Registration failed. Please try again.';
@@ -171,7 +171,7 @@ class AuthController extends Controller {
         $token = $_GET['token'] ?? '';
 
         if (!$token) {
-            $_SESSION['flash_error'] = 'Invalid verification link.';
+            $_SESSION['flash_error'] = function_exists('__') ? __('flash.invalid_verify') : 'Invalid verification link.';
             $this->redirect('login');
         }
 
@@ -179,14 +179,14 @@ class AuthController extends Controller {
         $user = $userModel->findByVerificationToken($token);
 
         if (!$user) {
-            $_SESSION['flash_error'] = 'Invalid or expired verification link.';
+            $_SESSION['flash_error'] = function_exists('__') ? __('flash.invalid_verify') : 'Invalid or expired verification link.';
             $this->redirect('login');
         }
 
         if ($userModel->verify($token)) {
-            $_SESSION['flash_success'] = 'Email verified successfully! You can now log in.';
+            $_SESSION['flash_success'] = function_exists('__') ? __('flash.verified_ok') : 'Email verified successfully! You can now log in.';
         } else {
-            $_SESSION['flash_error'] = 'Verification failed. Please try again.';
+            $_SESSION['flash_error'] = function_exists('__') ? __('flash.verify_failed') : 'Verification failed. Please try again.';
         }
 
         $this->redirect('login');
@@ -207,14 +207,14 @@ class AuthController extends Controller {
 
         if ($this->isPost()) {
             if (!$this->validateCSRF()) {
-                $_SESSION['flash_error'] = 'Invalid request. Please try again.';
+                $_SESSION['flash_error'] = function_exists('__') ? __('flash.invalid_request') : 'Invalid request. Please try again.';
                 $this->redirect('forgot-password');
             }
 
             $email = $this->sanitize($_POST['email'] ?? '');
 
             if (!Validator::email($email)) {
-                $_SESSION['flash_error'] = 'Invalid email format.';
+                $_SESSION['flash_error'] = function_exists('__') ? __('flash.invalid_email') : 'Invalid email format.';
                 $this->redirect('forgot-password');
             }
 
@@ -230,7 +230,7 @@ class AuthController extends Controller {
             }
 
             // Mensaje genérico (no revelamos si el email existe o no)
-            $_SESSION['flash_success'] = 'If that email exists, a password reset link has been sent.';
+            $_SESSION['flash_success'] = function_exists('__') ? __('flash.reset_sent') : 'If that email exists, a password reset link has been sent.';
             $this->redirect('login');
         }
 
@@ -250,7 +250,7 @@ class AuthController extends Controller {
         $token = $_GET['token'] ?? '';
 
         if (!$token) {
-            $_SESSION['flash_error'] = 'Invalid reset link.';
+            $_SESSION['flash_error'] = function_exists('__') ? __('flash.invalid_verify') : 'Invalid reset link.';
             $this->redirect('login');
         }
 
@@ -258,14 +258,14 @@ class AuthController extends Controller {
         $user = $userModel->findByResetToken($token);
 
         if (!$user) {
-            $_SESSION['flash_error'] = 'Invalid or expired reset link.';
+            $_SESSION['flash_error'] = function_exists('__') ? __('flash.invalid_verify') : 'Invalid or expired reset link.';
             $this->redirect('login');
         }
 
         // Si el usuario envía el formulario con la nueva contraseña
         if ($this->isPost()) {
             if (!$this->validateCSRF()) {
-                $_SESSION['flash_error'] = 'Invalid request. Please try again.';
+                $_SESSION['flash_error'] = function_exists('__') ? __('flash.invalid_request') : 'Invalid request. Please try again.';
                 $this->redirect('reset-password?token=' . $token);
             }
 
@@ -284,10 +284,10 @@ class AuthController extends Controller {
 
             if (empty($errors)) {
                 if ($userModel->resetPassword($token, $password)) {
-                    $_SESSION['flash_success'] = 'Password reset successful! You can now log in.';
+                    $_SESSION['flash_success'] = function_exists('__') ? __('flash.reset_ok') : 'Password reset successful! You can now log in.';
                     $this->redirect('login');
                 } else {
-                    $_SESSION['flash_error'] = 'Password reset failed. Please try again.';
+                    $_SESSION['flash_error'] = function_exists('__') ? __('flash.reset_failed') : 'Password reset failed. Please try again.';
                 }
             } else {
                 $_SESSION['flash_error'] = implode('<br>', $errors);

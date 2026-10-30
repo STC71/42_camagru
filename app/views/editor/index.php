@@ -45,14 +45,21 @@ include __DIR__ . '/../partials/header.php';
         <div class="upload-section">
             <form id="upload-form" method="POST" enctype="multipart/form-data">
                 <div class="upload-area" id="drop-zone">
-                    <input type="file" id="file-input" name="photo" accept="image/jpeg,image/png" required>
-                    <label for="file-input" class="upload-label">
+                    <!-- Input a pantalla completa de la zona: clic fiable en todos los navegadores -->
+                    <input type="file" id="file-input" name="image"
+                           accept="image/jpeg,image/png,image/jpg,.jpg,.jpeg,.png"
+                           required
+                           class="upload-file-input">
+                    <div class="upload-label" aria-hidden="true">
                         <span class="upload-icon">📁</span>
                         <p>Arrastra una imagen aquí o haz clic para seleccionar</p>
                         <small>Formatos soportados: JPG, PNG (máx. 5MB)</small>
-                    </label>
+                    </div>
                 </div>
-                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                <button type="button" id="upload-submit" class="btn btn-success" style="margin-top:1rem;" disabled>
+                    Subir imagen
+                </button>
             </form>
             
             <!-- Preview de la imagen subida -->
@@ -238,10 +245,11 @@ include __DIR__ . '/../partials/header.php';
 }
 
 .upload-area {
-    max-width: 640px;
+    max-width: 480px;
     margin: 0 auto;
-    padding: 3rem;
-    border: 3px dashed var(--light);
+    padding: 1.25rem 1.5rem;
+    min-height: 120px;
+    border: 2px dashed var(--light);
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -267,9 +275,9 @@ include __DIR__ . '/../partials/header.php';
 }
 
 .upload-icon {
-    font-size: 4rem;
+    font-size: 2rem;
     display: block;
-    margin-bottom: 1rem;
+    margin-bottom: 0.35rem;
 }
 
 #upload-preview, #upload-canvas {
@@ -418,9 +426,30 @@ include __DIR__ . '/../partials/header.php';
         width: 100%;
     }
 }
+
+/* Input invisible encima de la zona de drop: clic y teclado OK */
+.upload-area {
+    position: relative;
+}
+.upload-file-input {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    opacity: 0 !important;
+    cursor: pointer !important;
+    display: block !important;
+    z-index: 5 !important;
+    font-size: 0;
+}
+.upload-label {
+    pointer-events: none;
+}
+
 </style>
 
 <script src="<?php echo rtrim($_ENV['APP_URL'] ?? 'http://localhost:8080', '/'); ?>/js/editor.js"></script>
 
+</div><!-- .editor-page -->
 </div><!-- .editor-page -->
 <?php include __DIR__ . '/../partials/footer.php'; ?>

@@ -33,6 +33,8 @@ const EditorState = {
     stickerSize: 100,      // tamaño en px del lado del sticker en el preview
     isDragging: false,
     gifFrames: [],
+    uploadFile: null,  // archivo elegido en pestaña Subir
+
     isRecordingGif: false,
     gifInterval: null,
     previewRunning: false
@@ -300,6 +302,7 @@ function initializeStickerSelection() {
             });
             this.classList.add('selected');
             EditorState.selectedSticker = this.dataset.sticker;
+            if (typeof window.updateUploadButtonState === 'function') window.updateUploadButtonState();
 
             const sizeControl = document.getElementById('sticker-size-control') || document.querySelector('.sticker-size-control');
             if (sizeControl) {
@@ -412,56 +415,158 @@ function initializeCaptureButton() {
 }
 
 /**
- * Subida de archivo (0 o 1 sticker) — no tocamos la lógica del backend
+ * Subida de archivo (0 o más stickers según backend).
+ * - Clic en la zona / label → selector de archivo
+ * - Drag & drop de imagen sobre #drop-zone
+ * - Botón "Subir" o envío del formulario → POST /editor/upload (campo "image")
  */
 function initializeUploadButton() {
     const uploadForm = document.getElementById('upload-form');
-    if (!uploadForm) {
+    const fileInput = document.getElementById('file-input');
+    const dropZone = document.getElementById('drop-zone');
+    const submitBtn = document.getElementById('upload-submit');
+
+    if (!fileInput) {
+        console.warn('[Camagru] #file-input no encontrado');
         return;
     }
 
-    uploadForm.addEventListener('submit', async function (e) {
-        e.preventDefault();
+    function isAllowedImage(file) {
+        if (!file) return false;
+        if (file.type && /^image\/(jpeg|png|jpg)$/i.test(file.type)) return true;
+        if (/\.(jpe?g|png)$/i.test(file.name || '')) return true;
+        return false;
+    }
 
-        const fileInput = document.getElementById('file-input');
-        if (!fileInput || !fileInput.files.length) {
+    function showUploadPreview(file) {
+        const preview = document.getElementById('upload-preview');
+        const canvas = document.getElementById('upload-canvas');
+        if (!preview || !canvas || !file) return;
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = function () {
+            let w = img.width, h = img.height, maxW = 640;
+            if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            preview.style.display = 'block';
+            URL.revokeObjectURL(url);
+        };
+        img.src = url;
+    }
+
+    function acceptFile(file) {
+        if (!file) return;
+        if (!isAllowedImage(file)) {
+            showNotification('Solo JPG o PNG', 'error');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            showNotification('Máximo 5MB', 'error');
+            return;
+        }
+        EditorState.uploadFile = file;
+        showUploadPreview(file);
+        if (submitBtn) submitBtn.disabled = false;
+        showNotification('Imagen lista. Elige un sticker y pulsa Subir.', 'success');
+        updateUploadButtonState();
+    }
+
+    // Evitar que el navegador abra el archivo (fase de captura)
+    function blockFileNav(e) {
+        if (e.dataTransfer && e.dataTransfer.types) {
+            for (var i = 0; i < e.dataTransfer.types.length; i++) {
+                if (e.dataTransfer.types[i] === 'Files') {
+                    e.preventDefault();
+                    break;
+                }
+            }
+        }
+    }
+    window.addEventListener('dragover', blockFileNav, true);
+    window.addEventListener('drop', blockFileNav, true);
+
+    if (dropZone) {
+        dropZone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('drag-over');
+            if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+        });
+        dropZone.addEventListener('dragleave', function () {
+            dropZone.classList.remove('drag-over');
+        });
+        dropZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('drag-over');
+            var files = e.dataTransfer && e.dataTransfer.files;
+            if (files && files[0]) acceptFile(files[0]);
+        });
+    }
+
+    fileInput.addEventListener('click', function () {
+        // Reset para poder elegir otra imagen (o la misma) tantas veces como haga falta
+        this.value = '';
+    });
+
+    fileInput.addEventListener('change', function () {
+        if (fileInput.files && fileInput.files[0]) {
+            acceptFile(fileInput.files[0]);
+        }
+    });
+
+    window.updateUploadButtonState = function updateUploadButtonState() {
+        if (!submitBtn) return;
+        var hasFile = !!(EditorState.uploadFile || (fileInput.files && fileInput.files[0]));
+        var hasSticker = !!EditorState.selectedSticker;
+        // Misma regla que Capturar: hace falta imagen base + sticker
+        submitBtn.disabled = !(hasFile && hasSticker);
+    }
+
+    async function doUpload() {
+        var file = EditorState.uploadFile || (fileInput.files && fileInput.files[0]);
+        if (!file) {
             showNotification('Selecciona una imagen', 'error');
             return;
         }
-
-        const formData = new FormData();
-        formData.append('image', fileInput.files[0]);
-        formData.append('csrf_token', getCsrfToken());
-        if (EditorState.selectedSticker) {
-            formData.append('sticker', EditorState.selectedSticker);
-            formData.append('sticker_x', String(EditorState.stickerPosition.x));
-            formData.append('sticker_y', String(EditorState.stickerPosition.y));
-            formData.append('sticker_size', String(EditorState.stickerSize));
+        if (!EditorState.selectedSticker) {
+            showNotification('Selecciona un sticker antes de subir', 'error');
+            return;
         }
-
-        const submitBtn = this.querySelector('button[type="submit"]');
+        var formData = new FormData();
+        formData.append('image', file, file.name || 'photo.jpg');
+        formData.append('csrf_token', getCsrfToken());
+        formData.append('sticker', EditorState.selectedSticker);
+        formData.append('sticker_x', String(EditorState.stickerPosition.x));
+        formData.append('sticker_y', String(EditorState.stickerPosition.y));
+        formData.append('sticker_size', String(EditorState.stickerSize));
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.textContent = 'Subiendo...';
         }
-
         try {
-            const response = await fetch('/editor/upload', {
+            var response = await fetch('/editor/upload', {
                 method: 'POST',
                 credentials: 'same-origin',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                },
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
                 body: formData
             });
-            const result = await response.json();
+            var text = await response.text();
+            var result;
+            try { result = JSON.parse(text); } catch (err) {
+                console.error(text.slice(0, 400));
+                showNotification('Error del servidor al subir', 'error');
+                return;
+            }
             if (result.success) {
                 showNotification('¡Imagen subida con éxito!', 'success');
-                if (result.url) {
-                    addImageToGallery(result.filename, result.url);
-                }
+                if (result.url) addImageToGallery(result.filename, result.url);
+                EditorState.uploadFile = null;
                 fileInput.value = '';
+                var preview = document.getElementById('upload-preview');
+                if (preview) preview.style.display = 'none';
+                if (submitBtn) submitBtn.disabled = true;
             } else {
                 showNotification(result.message || 'Error al subir imagen', 'error');
             }
@@ -470,16 +575,26 @@ function initializeUploadButton() {
             showNotification('Error al subir imagen', 'error');
         } finally {
             if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Subir Imagen';
+                submitBtn.textContent = 'Subir imagen';
+                submitBtn.disabled = !EditorState.uploadFile;
             }
         }
-    });
+    }
+
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            doUpload();
+        });
+    }
+    if (submitBtn) {
+        submitBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            doUpload();
+        });
+    }
 }
 
-/**
- * GIF: frames BASE (sin sticker) + FormData (para que PHP rellene $_POST)
- */
 function initializeGifControls() {
     const startBtn = document.getElementById('start-gif');
     const stopBtn = document.getElementById('stop-gif');

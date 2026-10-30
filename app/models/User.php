@@ -209,4 +209,14 @@ class User {
         }
         return $stmt && $stmt->fetch() !== false;
     }
+
+    /**
+     * Elimina la cuenta de usuario.
+     * likes/comments/images tienen ON DELETE CASCADE en el esquema.
+     * Los ficheros de imagen deben borrarse antes con Image::deleteAllByUser si se desea.
+     */
+    public function deleteById($userId) {
+        $sql = "DELETE FROM users WHERE id = ?";
+        return $this->db->query($sql, [$userId]) !== false;
+    }
 }

@@ -136,4 +136,32 @@ class Image {
 
         return false;
     }
+
+    /**
+     * Devuelve todas las imágenes de un usuario (para borrado de cuenta).
+     */
+    public function getAllByUser($userId) {
+        $sql = "SELECT * FROM images WHERE user_id = ?";
+        $stmt = $this->db->query($sql, [$userId]);
+        return $stmt ? $stmt->fetchAll() : [];
+    }
+
+    /**
+     * Borra del disco y de la BD todas las fotos de un usuario.
+     * Las FKs en likes/comments ya hacen CASCADE sobre images.
+     */
+    public function deleteAllByUser($userId) {
+        $images = $this->getAllByUser($userId);
+        $dir = realpath(__DIR__ . '/../../public/uploads/images');
+        foreach ($images as $image) {
+            if ($dir && !empty($image['filename'])) {
+                $filepath = $dir . DIRECTORY_SEPARATOR . $image['filename'];
+                if (is_file($filepath)) {
+                    @unlink($filepath);
+                }
+            }
+        }
+        $sql = "DELETE FROM images WHERE user_id = ?";
+        return $this->db->query($sql, [$userId]) !== false;
+    }
 }
