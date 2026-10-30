@@ -1,53 +1,66 @@
 # 🗄️ SQL / MySQL en Camagru
 
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://dev.mysql.com/doc/)
-[![PDO](https://img.shields.io/badge/PDO-Prepared_Statements-777BB4?style=flat-square)](https://www.php.net/manual/en/book.pdo.php)
 [![42](https://img.shields.io/badge/42-Málaga-00babc?style=flat-square&logo=42)](https://www.42malaga.com/)
 
-> **Navegación:** [README](README.md) · [database/](database/README.md) · [models](app/models/README.md) · [MySQL docs](https://dev.mysql.com/doc/)
+> **Navegación:** [README](README.md) · [database/](database/README.md) · [models](app/models/README.md)
 
 ---
 
-## 1. Motor
-
-MySQL **8.0** en Docker. Acceso solo mediante **PDO** y sentencias preparadas (eval: no frameworks, sí SQL).
-
----
-
-## 2. Esquema
-
-Definido en `database/init.sql`:
-
-- Unicidad de `username` / `email`  
-- Tokens de verificación y reset  
-- `likes` con UNIQUE (`image_id`, `user_id`)  
-- CASCADE al borrar usuario o imagen  
-
-Ver [DATABASE_INITIALIZATION.md](DATABASE_INITIALIZATION.md).
-
----
-
-## 3. Ejemplo seguro
+## 1. Creación (extracto de `database/init.sql`)
 
 ```sql
-SELECT * FROM users WHERE email = ?;
--- params: [$email]
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `verified` tinyint(1) DEFAULT 0,
+  `verification_token` varchar(64) DEFAULT NULL,
+  `notify_comments` tinyint(1) DEFAULT 1,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-Nunca:
-
 ```sql
--- MAL
-"SELECT * FROM users WHERE email = '$email'"
+CONSTRAINT `fk_images_user`
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ```
 
 ---
 
-## 4. Enlaces
+## 2. Consultas desde PHP (modelos)
 
-- [InnoDB](https://dev.mysql.com/doc/refman/8.0/en/innodb-storage-engine.html)  
+```php
+// Login / email
+$sql = "SELECT * FROM users WHERE email = ?";
+$stmt = $this->db->query($sql, [$email]);
+
+// Like único (la UNIQUE en BD evita duplicados)
+$sql = "INSERT INTO likes (image_id, user_id) VALUES (?, ?)";
+$this->db->query($sql, [$imageId, $userId]);
+```
+
+---
+
+## 3. Qué evita el proyecto
+
+```sql
+-- ❌ Concatenar input
+SELECT * FROM users WHERE email = '$email'
+```
+
+Siempre placeholders `?` + array de parámetros.
+
+---
+
+## 4. Docs oficiales
+
+- [CREATE TABLE](https://dev.mysql.com/doc/refman/8.0/en/create-table.html)  
 - [Foreign keys](https://dev.mysql.com/doc/refman/8.0/en/create-table-foreign-keys.html)  
-- [PDO MySQL](https://www.php.net/manual/en/ref.pdo-mysql.php)
+- [PDO](https://www.php.net/manual/en/book.pdo.php)
 
 ---
 

@@ -68,8 +68,9 @@ Más: [COMPLIANCE.md](../COMPLIANCE.md) · [php.md](../php.md)
 
 | Ruta | Contenido |
 |------|-----------|
-| [core/](core/README.md) | Piezas reutilizables |
 | [controllers/](controllers/README.md) | Endpoints y responsabilidades |
+| [core/](core/README.md) | Piezas reutilizables |
+| [lang/](lang/README.md) | Idiomas soportados |
 | [models/](models/README.md) | Tablas y métodos |
 | [views/](views/README.md) | Plantillas y partials |
 
