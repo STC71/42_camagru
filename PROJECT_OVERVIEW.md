@@ -6,6 +6,10 @@
 
 ---
 
+
+> **Navegación:** [README](README.md) · [QUICKSTART](QUICKSTART.md) · [SUMMARY](SUMMARY.md) · [COMPLIANCE](COMPLIANCE.md) · [app/](app/README.md) · [public/](public/README.md)
+
+
 ## 📊 Estadísticas
 
 ```
@@ -413,3 +417,21 @@ Código:
 ---
 
 *Última actualización: Agosto 2026*
+
+---
+
+## Documentación enlazada
+
+| Documento | Rol |
+|-----------|-----|
+| [README.md](README.md) | Entrada del proyecto |
+| [app/core/README.md](app/core/README.md) | Kernel PHP |
+| [app/controllers/README.md](app/controllers/README.md) | HTTP |
+| [database/README.md](database/README.md) | Esquema |
+| [docker.md](docker.md) | Contenedores |
+
+---
+
+<p align="center">
+  <b>Hecho con ❤️ por sternero en 42 Málaga — Octubre 2026</b>
+</p>

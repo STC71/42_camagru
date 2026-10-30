@@ -1,3 +1,5 @@
+> **Navegación:** [README](README.md) · [COMPLIANCE](COMPLIANCE.md) · [QUICKSTART](QUICKSTART.md)
+
 # 📦 Camagru - Resumen Técnico
 
 ## 🎯 Estado del Proyecto
@@ -483,3 +485,9 @@ curl -X POST /gallery/like  # → 403 sin CSRF token
 ---
 
 *Proyecto completo y listo para evaluación - sternero - 42 Málaga - Enero 2026*
+
+---
+
+<p align="center">
+  <b>Hecho con ❤️ por sternero en 42 Málaga — Octubre 2026</b>
+</p>

@@ -1,174 +1,164 @@
 # 🚀 QUICKSTART – Camagru
 
-Guía rápida para poner en marcha el proyecto en menos de 5 minutos.
+Puesta en marcha en pocos minutos. Documentación general: [README.md](README.md).
 
 [![42](https://img.shields.io/badge/42-Málaga-00babc?style=flat-square&logo=42)](https://www.42malaga.com/)
 [![Docker](https://img.shields.io/badge/Docker-Required-2496ED?style=flat-square&logo=docker)](https://docs.docker.com/get-docker/)
 
 ---
 
-## 1. Prerrequisitos
+## 1. Requisitos
 
-- [Docker](https://docs.docker.com/get-docker/) instalado
-- [Docker Compose](https://docs.docker.com/compose/install/) (v2 recomendado)
-- Puerto **8080** libre
+- [Docker](https://docs.docker.com/get-docker/) + Docker Compose
+- Puertos libres: **8080** (app), **3306** (MySQL), **8081** (phpMyAdmin, opcional)
+- (Opcional) cuenta [Mailtrap](https://mailtrap.io/) u otro SMTP para correos reales de verificación
 
 ---
 
-## 2. Pasos
+## 2. Clonar y configurar entorno
 
 ```bash
-# Clonar (o entrar en el directorio del proyecto)
-cd 42_camagru
+cd /ruta/a/camagru
+cp .env.example .env
+# o: ./env_setup.sh
+```
 
-# Generar el archivo .env de forma interactiva
-# (sugiere automáticamente el usuario de tu sistema con whoami)
-chmod +x env_setup.sh
-./env_setup.sh
+Variables habituales en `.env`:
 
-# Construir y levantar los contenedores
+| Variable | Ejemplo | Uso |
+|----------|---------|-----|
+| `APP_URL` | `http://localhost:8080` | Enlaces de email y assets |
+| `DB_*` | host `db`, usuario/clave del compose | PDO |
+| `MAIL_HOST` | `sandbox.smtp.mailtrap.io` | SMTP |
+| `MAIL_PORT` | `2525` | SMTP |
+| `MAIL_USER` / `MAIL_PASS` | credenciales Mailtrap | Auth SMTP |
+| `MAIL_FROM` | `noreply@camagru.local` | Remitente |
+
+Permisos del `.env` (el contenedor debe poder leerlo):
+
+```bash
+chmod 644 .env
+```
+
+---
+
+## 3. Levantar servicios
+
+```bash
 docker-compose up --build -d
-
-# (Opcional) Ver los logs
-docker-compose logs -f web
+docker-compose ps
+curl -sI http://localhost:8080 | head -3
 ```
 
-Abre el navegador en:
+| URL | Servicio |
+|-----|----------|
+| http://localhost:8080 | Aplicación |
+| http://localhost:8081 | phpMyAdmin |
 
-```
-http://localhost:8080
-```
-
----
-
-## 3. Verificar que todo está bien
+Si los contenedores se detienen al cerrar la sesión de Docker, vuelve a:
 
 ```bash
-# Comprobar que la extensión imagick (GIF) está cargada
-docker-compose exec web php -m | grep imagick
-
-# Debe mostrar:
-# imagick
-```
-
-Si aparece `imagick`, el bonus de GIF animado funciona **out-of-the-box**.
-
----
-
-## 4. Configuración de correo (opcional pero recomendada)
-
-Para que funcionen los emails de verificación y notificaciones:
-
-1. Crea una cuenta gratuita en [Mailtrap](https://mailtrap.io)
-2. Copia las credenciales SMTP
-3. Vuelve a ejecutar `./env_setup.sh` o edita `.env` manualmente
-
----
-
-## 5. Comandos útiles
-
-| Comando | Descripción |
-|---------|-------------|
-| `docker-compose up --build -d` | Construir y arrancar |
-| `docker-compose up -d` | Arrancar sin reconstruir |
-| `docker-compose down` | Parar y eliminar contenedores (conserva volúmenes) |
-| `docker-compose logs -f web` | Ver logs del servidor web |
-| `docker-compose exec web bash` | Entrar en el contenedor |
-| `./test_eval.sh` | Guía interactiva de evaluación |
-| `./test_auto.sh` | Suite de pruebas automatizadas |
-
----
-
-## 6. Contenedores detenidos y reinicio automático
-
-Los servicios de Camagru declaran la política **`restart: unless-stopped`** en `docker-compose.yml`.
-
-Eso significa:
-
-- Si Docker o la máquina se reinician, los contenedores **vuelven a arrancar solos**.
-- Si tú los detienes a propósito (`docker-compose stop` / `down`), **no** se reactivan hasta que los vuelvas a levantar.
-- No hace falta reconstruir imágenes ni borrar volúmenes solo porque estén parados.
-
-### Arranque habitual (lo primero que debes probar)
-
-```bash
-cd ~/sgoinfre/42_outer_core/web_database/camagru   # o la ruta de tu proyecto
 docker-compose up -d
-docker ps
-curl -I http://localhost:8080
 ```
 
-La respuesta esperada del último comando incluye `HTTP/1.1 200 OK`.
-
-### Si `docker-compose` no está disponible o quieres arrancar contenedores ya existentes
-
-```bash
-docker ps -a
-docker start camagru_db
-docker exec camagru_db mysqladmin ping
-docker start camagru_web camagru_phpmyadmin
-docker ps
-curl -I http://localhost:8080
-```
-
-Adapta los nombres si `docker ps -a` muestra otros.
-
-### Comprobar la política de reinicio
-
-```bash
-docker inspect -f '{{.Name}} | restart={{.HostConfig.RestartPolicy.Name}}' \
-  camagru_db camagru_web camagru_phpmyadmin
-```
-
-Debería mostrar `restart=unless-stopped` en los tres.
-
-### Si un servicio no responde
-
-Consulta los logs **antes** de destruir nada:
-
-```bash
-docker logs --tail 100 camagru_db
-docker logs --tail 100 camagru_web
-docker logs --tail 100 camagru_phpmyadmin
-```
-
-**No uses** `docker-compose down -v` como primer intento: la opción `-v` puede eliminar volúmenes y, con ellos, la base de datos.
+Política recomendada en compose: `restart: unless-stopped` (ver [docker.md](docker.md)).
 
 ---
 
-## 7. Problemas frecuentes
+## 4. Correo (verificación y notificaciones)
 
-**El contenedor no arranca**
-```bash
-docker-compose down
-docker-compose up --build -d
-```
+1. Crea un inbox en [Mailtrap](https://mailtrap.io/) (Email Testing → Sandboxes).  
+2. Copia **Host, Port, Username, Password** al `.env`.  
+3. `docker-compose restart web`  
+4. Registra un usuario → el mail de verificación aparece en Mailtrap → abre el enlace.
 
-**Permisos en uploads** (si fallan las subidas; en macOS/Windows a veces `chown` no funciona)
-```bash
-docker-compose exec web chmod -R 777 /var/www/html/public/uploads
-```
-
-**Cuenta creada pero no puedes entrar (“verify your email”)**  
-Si el correo no llega, puedes marcar el usuario como verificado en la BD:
-
-```bash
-source .env
-docker-compose exec db mysql -u root -p"${DB_ROOT_PASS}" -D "${DB_NAME}" -e \
-  "UPDATE users SET verified = 1, verification_token = NULL WHERE username = 'TU_USERNAME';"
-```
-
-**Cambiar el puerto**  
-Edita `docker-compose.yml` (sección `ports`) y la variable `APP_URL` en `.env`.
+Sin SMTP válido el registro puede crearse pero **no** podrás verificar (salvo marcar `verified` a mano en BD; solo para depuración local).
 
 ---
 
-## 8. Documentación relacionada
+## 5. Extensiones PHP críticas
 
-- [README.md](README.md) – Visión general
-- [COMPLIANCE.md](COMPLIANCE.md) – Checklist de evaluación
-- [docs/docker.md](docs/docker.md) – Detalles de containerización
-- [docs/php.md](docs/php.md) – PHP y extensiones
+```bash
+docker-compose exec web php -m | grep -E 'pdo_mysql|gd|imagick'
+docker-compose exec web php -r 'print_r(gd_info());' | grep -i jpeg
+```
+
+| Extensión | Para qué |
+|-----------|----------|
+| `pdo_mysql` | Base de datos |
+| `gd` (+ JPEG) | Captura, stickers, upload |
+| `imagick` | Bonus GIF |
+
+Si falta JPEG o imagick, revisa el [Dockerfile](Dockerfile) y reconstruye:
+
+```bash
+docker-compose build --no-cache web
+docker-compose up -d --force-recreate web
+```
+
+Detalle: [php.md](php.md) · [docker.md](docker.md)
+
+---
+
+## 6. Uploads escribibles
+
+```bash
+chmod -R 777 public/uploads
+# o dentro del contenedor:
+docker-compose exec web bash -c 'mkdir -p /var/www/html/public/uploads/images /var/www/html/public/uploads/temp && chmod -R 777 /var/www/html/public/uploads'
+```
+
+Más: [public/uploads/README.md](public/uploads/README.md)
+
+---
+
+## 7. Primer uso funcional
+
+1. **Registro** → verificar email (Mailtrap).  
+2. **Login**.  
+3. **Editor**: Iniciar cámara → sticker → Capturar (o pestaña Subir archivo).  
+4. **Galería**: likes / comentarios.  
+5. **Ajustes**: perfil, notificaciones, (opcional) borrar cuenta.
+
+GIF: sticker → Grabar GIF → Network `create-gif` debe devolver `"success": true`.
+
+---
+
+## 8. Tests
+
+```bash
+./test_auto.sh          # automático
+./test_auto.sh --quick  # solo críticos
+./test_eval.sh          # guía de defensa interactiva
+```
+
+---
+
+## 9. Problemas frecuentes
+
+| Síntoma | Qué mirar |
+|---------|-----------|
+| Permission denied en `.env` | `chmod 644 .env` + recreate web |
+| “No JPEG support” | Dockerfile GD `--with-jpeg` + rebuild `--no-cache` |
+| GIF falla | `php -m \| grep imagick` |
+| No llega el mail | `MAIL_*` en `.env` y reinicio `web` |
+| Upload no escribe | permisos `public/uploads` |
+| Contenedores parados | `docker-compose up -d` |
+
+Logs:
+
+```bash
+docker-compose logs web --tail 50
+```
+
+---
+
+## 10. Documentación relacionada
+
+- [README.md](README.md) — visión general y mapa de docs  
+- [COMPLIANCE.md](COMPLIANCE.md) — checklist subject/eval  
+- [DATABASE_INITIALIZATION.md](DATABASE_INITIALIZATION.md) — esquema SQL  
+- [docker.md](docker.md) · [php.md](php.md) · [config/README.md](config/README.md)
 
 ---
 

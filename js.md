@@ -1,152 +1,46 @@
-# ⚡ JavaScript en Camagru
+# 🟨 JavaScript en Camagru
 
-[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
-[![MDN](https://img.shields.io/badge/MDN-Web_Docs-000000?style=flat-square&logo=mdnwebdocs)](https://developer.mozilla.org/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/es/docs/Web/JavaScript)
 [![42](https://img.shields.io/badge/42-Málaga-00babc?style=flat-square&logo=42)](https://www.42malaga.com/)
 
----
-
-## 1. ¿Qué es JavaScript y qué papel juega aquí?
-
-**JavaScript** es el lenguaje que se ejecuta **dentro del navegador** del usuario.
-
-En Camagru se encarga de todo lo interactivo:
-
-- Encender la webcam
-- Mostrar el sticker en tiempo real encima del vídeo
-- Permitir arrastrar el sticker
-- Enviar likes y comentarios sin recargar la página (AJAX)
-- Cargar más fotos al hacer scroll (infinite scroll)
-- Grabar fotogramas para crear un GIF
-
-> **Analogía cotidiana:**  
-> Si PHP es la cocina del restaurante, **JavaScript es el camarero**. Recoge lo que el cliente quiere, se lo comunica a la cocina y actualiza la mesa sin que el cliente tenga que levantarse.
-
-Documentación de referencia: [MDN Web Docs – JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+> **Navegación:** [README](README.md) · [public/js](public/js/README.md) · [editor view](app/views/editor/README.md) · [MDN JS](https://developer.mozilla.org/es/docs/Web/JavaScript)
 
 ---
 
-## 2. Enfoque del proyecto
+## 1. Sin bundler
 
-| Decisión | Motivo |
-|----------|--------|
-| **JavaScript vanilla** (sin React, Vue, jQuery…) | El subject de 42 prohíbe frameworks |
-| Código en `/public/js/` | Separación clara cliente / servidor |
-| ES6+ (`let`, `const`, arrow functions, `fetch`…) | Código más legible y moderno |
+El eval desaconseja npm/webpack: los `.js` se sirven tal cual desde `public/js/`.
 
 ---
 
-## 3. APIs del navegador que utilizamos
+## 2. Editor (`editor.js`)
 
-| API | ¿Para qué? | Documentación oficial |
-|-----|------------|------------------------|
-| **MediaDevices.getUserMedia** | Acceder a la webcam | [MDN getUserMedia](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) |
-| **Canvas API** | Dibujar el vídeo + sticker y capturar fotogramas | [MDN Canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) |
-| **Fetch API** | Enviar likes, comentarios y pedir más fotos | [MDN Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) |
-| **Intersection Observer** | Detectar cuándo el usuario llega al final de la galería | [MDN Intersection Observer](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API) |
-| **FileReader** | Previsualizar una imagen antes de subirla | [MDN FileReader](https://developer.mozilla.org/en-US/docs/Web/API/FileReader) |
-| **Drag / Pointer events** | Mover el sticker con el ratón o el dedo | [MDN Pointer events](https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events) |
+| API / idea | Uso |
+|------------|-----|
+| `getUserMedia` | Webcam |
+| `canvas` | Preview del sticker y frames |
+| `fetch` + `FormData` | capture, upload, create-gif, delete |
+| Drag events | Posición del sticker en % |
 
----
+**Upload:** impedir el default del navegador en `dragover`/`drop`; guardar el `File` en memoria; enviar campo `image`.
 
-## 4. Compatibilidad exigida por el subject
-
-El subject pide que funcione en:
-
-- **Firefox ≥ 41**
-- **Chrome ≥ 46**
-
-Todas las APIs que usamos están disponibles en esas versiones (o tienen alternativas sencillas).
+**GIF:** varios frames en corto intervalo → POST al servidor (Imagick).
 
 ---
 
-## 5. Ejemplos reales del proyecto
+## 3. Galería
 
-### 5.1 Encender la webcam
-
-```javascript
-async function startCamera() {
-    const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' },
-        audio: false
-    });
-    videoElement.srcObject = stream;
-}
-```
-
-### 5.2 Dibujar vídeo + sticker en un canvas (live preview)
-
-```javascript
-function drawFrame() {
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    ctx.drawImage(stickerImg, stickerX, stickerY, stickerW, stickerH);
-    requestAnimationFrame(drawFrame); // siguiente fotograma
-}
-```
-
-### 5.3 Enviar un like con Fetch (AJAX)
-
-```javascript
-async function toggleLike(imageId) {
-    const formData = new FormData();
-    formData.append('image_id', imageId);
-    formData.append('csrf_token', csrfToken);
-
-    const response = await fetch('/gallery/like', {
-        method: 'POST',
-        body: formData
-    });
-    const data = await response.json();
-
-    // Actualizamos el contador y el corazón sin recargar la página
-    updateLikeUI(imageId, data.liked, data.like_count);
-}
-```
-
-### 5.4 Scroll infinito con Intersection Observer
-
-```javascript
-const observer = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting && hasMore) {
-        loadMoreImages(nextPage);
-    }
-});
-
-observer.observe(document.querySelector('#scroll-sentinel'));
-```
-
-### 5.5 Capturar fotogramas para el GIF
-
-```javascript
-function captureFrame() {
-    const dataUrl = canvas.toDataURL('image/png');
-    frames.push(dataUrl);
-}
-// Luego se envían todos los frames a EditorController::createGif
-```
+- `fetch` para like/comment sin recargar.  
+- Scroll o botón “cargar más” → más páginas JSON/HTML.
 
 ---
 
-## 6. Buenas prácticas que seguimos
+## 4. Enlaces MDN
 
-- Usamos `const` y `let` (nunca `var`)
-- Preferimos `async/await` frente a `.then()` encadenados
-- Siempre enviamos el token CSRF en las peticiones POST
-- Validamos en el cliente **y** en el servidor (nunca confiamos solo en el cliente)
-- Evitamos contaminar el ámbito global siempre que es posible
-
----
-
-## 7. Recursos oficiales recomendados
-
-| Recurso | Enlace |
-|---------|--------|
-| JavaScript Guide (MDN) | https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide |
-| Web APIs | https://developer.mozilla.org/en-US/docs/Web/API |
-| getUserMedia | https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia |
-| Fetch API | https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API |
-| Canvas tutorial | https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial |
-| Intersection Observer | https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API |
+- [Fetch](https://developer.mozilla.org/es/docs/Web/API/Fetch_API)  
+- [MediaDevices.getUserMedia](https://developer.mozilla.org/es/docs/Web/API/MediaDevices/getUserMedia)  
+- [Canvas](https://developer.mozilla.org/es/docs/Web/API/Canvas_API)  
+- [FormData](https://developer.mozilla.org/es/docs/Web/API/FormData)
 
 ---
 

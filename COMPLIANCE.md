@@ -119,3 +119,35 @@ Documento de cumplimiento respecto al subject oficial y a la hoja de evaluación
 <p align="center">
   <b>Hecho con ❤️ por sternero en 42 Málaga — Octubre 2026</b>
 </p>
+
+
+---
+
+## Mapa rápido con la hoja de evaluación (en.eval)
+
+| Bloque eval | Estado esperado | Dónde verificar |
+|-------------|-----------------|-----------------|
+| Preflight (PHP, no framework, PDO EXCEPTION) | OK | `./test_auto.sh --section preflight` |
+| Ignition (server works as is) | OK | `docker-compose up -d` + `curl -I http://localhost:8080` |
+| User creation + verify mail | Manual + Mailtrap | Auth + [QUICKSTART.md](QUICKSTART.md) |
+| Authentication + logout + reset | Manual | AuthController |
+| Editing (webcam, stickers, upload, server-side) | Manual | Editor + [js.md](js.md) |
+| Gallery + likes + comments + notify | Manual | GalleryController |
+| Preferences / only own delete | Manual | User / Editor delete |
+| Security (hash, XSS, SQLi) | `./test_auto.sh --section security` | models + views |
+| Bonus AJAX / preview / scroll / GIF | Tras mandatory OK | `imagick`, editor.js, gallery.js |
+
+Guía hablada paso a paso: **[test_eval.sh](test_eval.sh)**.
+
+---
+
+## Documentación relacionada
+
+- [README.md](README.md) · [QUICKSTART.md](QUICKSTART.md) · [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)
+- [php.md](php.md) · [sql.md](sql.md) · [docker.md](docker.md)
+
+---
+
+<p align="center">
+  <b>Hecho con ❤️ por sternero en 42 Málaga — Octubre 2026</b>
+</p>

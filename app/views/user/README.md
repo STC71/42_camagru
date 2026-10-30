@@ -1,23 +1,29 @@
-# 👤 Vistas de Usuario
+# 👤 `app/views/user/` — Perfil y ajustes
 
-## 🎯 ¿Qué es y para qué sirve?
+> **Navegación:** [views/](../README.md) · [UserController](../../controllers/README.md) · [QUICKSTART](../../../QUICKSTART.md)
 
-Páginas relacionadas con el **perfil personal** del usuario (algunas están en desarrollo).
+## Estado actual (implementado)
 
-## 📋 Archivos
+| Vista | Función |
+|-------|---------|
+| `profile.php` | Datos del usuario + grid de **mis fotos** |
+| `settings.php` | Editar perfil, cambiar password, preferencia de email de comentarios, **eliminar cuenta** (checkbox borrar fotos + confirmar password) |
 
-| Página | Estado | ¿Qué hace? |
-|--------|--------|------------|
-| `profile.php` | 🚧 En desarrollo | Ver el perfil público de un usuario |
-| `settings.php` | 🚧 En desarrollo | Cambiar configuración de cuenta |
-| `my-photos.php` | 🚧 En desarrollo | Gestionar mis fotos (ver, eliminar) |
+> Documentación antigua podía marcar estas pantallas como “en desarrollo”; el código actual las sirve vía `UserController`.
 
-## 📺 Videos Educativos en Español
+## Seguridad
 
-### Perfiles de Usuario
-- [Sistema de Perfiles en PHP](https://www.youtube.com/watch?v=BXfqJa7o3Gk) - Por HolaMundo
-- [Editar Perfil de Usuario](https://www.youtube.com/watch?v=Y3k0uHGHbOc) - Por FaztCode
+- Solo sesión autenticada.  
+- CSRF en todos los POST.  
+- Baja de cuenta: verifica contraseña; opcionalmente `Image::deleteAllByUser` antes del `DELETE` del usuario (CASCADE en BD).
+
+## Enlaces
+
+- [models/User](../../models/README.md) · [models/Image](../../models/README.md)  
+- [partials](../partials/README.md)
 
 ---
 
-[⬆ Volver a views/](../README.md) | [⬆ README principal](../../../README.md)
+<p align="center">
+  <b>Hecho con ❤️ por sternero en 42 Málaga — Octubre 2026</b>
+</p>

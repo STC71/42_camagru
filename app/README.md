@@ -1,121 +1,82 @@
-# 📦 Directorio `app/` - Aplicación Principal
+# 📦 `app/` — Aplicación principal (MVC)
 
-Este directorio es el **corazón de Camagru**. Aquí vive toda la lógica de la aplicación organizada siguiendo el patrón MVC (Model-View-Controller).
+> **Navegación:** [README del proyecto](../README.md) · [QUICKSTART](../QUICKSTART.md) · [PROJECT_OVERVIEW](../PROJECT_OVERVIEW.md) · [public/](../public/README.md)
 
-## 🎯 ¿Qué es y para qué sirve?
-
-**app/** contiene el código que hace funcionar la aplicación. Está separado del directorio público por seguridad: nadie puede acceder directamente a estos archivos desde el navegador.
-
-**¿Por qué esta estructura?** Porque separa claramente las responsabilidades:
-- Los **Modelos** hablan con la base de datos
-- Las **Vistas** muestran información al usuario
-- Los **Controladores** coordinan todo
-- El **Core** proporciona herramientas compartidas
-
-## 📋 Estructura y Propósito
-
-```
-app/
-├── controllers/     # Coordinan las peticiones del usuario
-├── models/          # Gestionan los datos (usuarios, fotos, likes, comentarios)
-├── views/           # Muestran páginas HTML al usuario
-└── core/            # Herramientas fundamentales (router, base de datos, email, etc.)
-```
-
-## 🔄 Cómo Funciona el Flujo MVC
-
-**Ejemplo:** Usuario sube una foto con sticker
-
-1. **Usuario** hace clic en "Capturar" en el editor
-2. **Router** (core/) recibe la petición → `/editor/capture`
-3. **EditorController** (controllers/) procesa la foto y el sticker
-4. **Image Model** (models/) guarda la foto en la base de datos
-5. **Vista** (views/) muestra confirmación de éxito
-6. **Usuario** ve su foto en la galería
-
-**¿Por qué esta separación?** Porque cada parte tiene una única responsabilidad:
-- Si cambias cómo se ven las cosas → solo tocas **views/**
-- Si cambias cómo se guardan datos → solo tocas **models/**
-- Si cambias la lógica → solo tocas **controllers/**
-
-## 📂 ¿Qué hay en cada carpeta?
-
-### [controllers/](controllers/) - Los Coordinadores
-**¿Qué hace?** Recibe las peticiones del usuario y coordina la respuesta.
-
-**Contiene:**
-- `AuthController.php` - Todo lo relacionado con login, registro y seguridad
-- `EditorController.php` - Captura de fotos, stickers y generación de GIFs
-- `GalleryController.php` - Mostrar fotos, dar likes, comentar
-- `HomeController.php` - Página de bienvenida
-- `UserController.php` - Perfil y configuración (en desarrollo)
-
-**¿Por qué separado en archivos?** Para que cada controlador se encargue solo de su área.
-
-### [models/](models/) - Los Gestores de Datos
-**¿Qué hace?** Se comunica con la base de datos MySQL de forma segura.
-
-**Contiene:**
-- `User.php` - Crear usuarios, verificar emails, cambiar contraseñas
-- `Image.php` - Guardar fotos, listar galería, eliminar imágenes
-- `Like.php` - Dar/quitar likes, contar likes de cada foto
-- `Comment.php` - Añadir comentarios, listar comentarios
-
-**¿Por qué es importante?** Porque centraliza TODO el acceso a datos y previene inyecciones SQL.
-
-### [views/](views/) - La Presentación
-**¿Qué hace?** Genera el HTML que ve el usuario en su navegador.
-
-**Contiene:**
-- `auth/` - Formularios de login, registro, recuperar contraseña
-- `editor/` - Interfaz del editor (webcam, stickers, captura)
-- `gallery/` - Grid de fotos con likes y comentarios
-- `home/` - Página principal
-- `partials/` - Header y footer compartidos
-
-**¿Por qué separado?** Para reutilizar componentes y mantener un diseño consistente.
-
-### [core/](core/) - Las Herramientas Fundamentales
-**¿Qué hace?** Proporciona funcionalidad básica que todos necesitan.
-
-**Contiene:**
-- `Router.php` - Convierte `/gallery/show/42` en código ejecutable
-- `Database.php` - Conexión única y segura a MySQL
-- `Controller.php` - Métodos comunes para todos los controladores
-- `Mailer.php` - Envía emails de verificación y notificaciones
-- `Validator.php` - Valida formularios y datos del usuario
-
-**¿Por qué un "core"?** Para no repetir código. Todos los controladores heredan de `Controller`, todos los modelos usan `Database`, etc.
-
-## 📺 Videos Educativos en Español
-
-### Patrón MVC
-- [¿Qué es el Patrón MVC? Explicación Simple](https://www.youtube.com/watch?v=ANQDl4hGJC0) - Por Código Facilito
-- [MVC en PHP desde Cero - Tutorial Completo](https://www.youtube.com/watch?v=5s7Nn5dxC0E) - Por CodigoMasters
-- [Arquitectura MVC - Conceptos y Ejemplos](https://www.youtube.com/watch?v=6nHkqkHdvLI) - Por Píldoras Informáticas
-
-### PHP Orientado a Objetos
-- [POO en PHP - Curso Completo](https://www.youtube.com/watch?v=Sb_bdOVN9HQ) - Por Código Facilito
-- [Clases y Objetos en PHP](https://www.youtube.com/watch?v=1E5PqjZEFOw) - Por FaztCode
-- [Herencia y Polimorfismo en PHP](https://www.youtube.com/watch?v=vY6_5E3Ky7Q) - Por EDteam
-
-### Arquitectura de Software
-- [Principios SOLID en PHP](https://www.youtube.com/watch?v=2O82eZ8K6yE) - Por MoureDev
-- [Clean Code en PHP](https://www.youtube.com/watch?v=2PPzqTJNA-U) - Por Código Facilito
-- [Patrones de Diseño en PHP](https://www.youtube.com/watch?v=cwfuydUHZ7o) - Por Píldoras Informáticas
-
-### Desarrollo Web Profesional
-- [Estructura de Proyectos PHP](https://www.youtube.com/watch?v=6Z7M1qMq3Fo) - Por HolaMundo
-- [Buenas Prácticas en PHP](https://www.youtube.com/watch?v=dO3deLNHxCw) - Por MoureDev
-
-## 🔗 Enlaces Relacionados
-
-- [Documentación Principal](../README.md)
-- [Controladores](controllers/README.md)
-- [Modelos](models/README.md)
-- [Vistas](views/README.md)
-- [Core Framework](core/README.md)
+Este directorio es el **corazón de Camagru**: lógica de negocio y presentación, **fuera** del document root para que no sea accesible directamente por URL (Apache solo sirve `public/`).
 
 ---
 
-[⬆ Volver al README principal](../README.md)
+## ¿Qué es y para qué sirve?
+
+Organiza el código en capas **MVC** más un **core** compartido:
+
+| Capa | Carpeta | Rol |
+|------|---------|-----|
+| Coordinación HTTP | [controllers/](controllers/README.md) | Recibe la petición, valida, llama modelos, elige vista o JSON |
+| Datos | [models/](models/README.md) | SQL vía PDO (`Database::query`) |
+| HTML | [views/](views/README.md) | Plantillas PHP + partials |
+| Kernel | [core/](core/README.md) | Router, PDO, Mailer, Validator, I18n, Controller base |
+| Traducciones | `lang/` | Arrays ES / EN / PT / DE / FR para `__()` |
+
+**Analogía:** el restaurante. Los *controllers* son los camareros, los *models* la cocina/almacén, las *views* el plato servido, el *core* la infraestructura (caja, luces, reservas).
+
+---
+
+## Flujo de una petición
+
+```
+Cliente → public/index.php → Router → Controller → Model (MySQL)
+                                         ↓
+                                       View (HTML) o json()
+```
+
+1. `public/index.php` arranca sesión, carga config, `I18n::init()`, despacha la ruta.  
+2. El controlador usa `$this->model('User')`, `$this->view(...)`, `$this->redirect()`, `$this->json()`.  
+3. Las vistas incluyen [partials/header](views/partials/README.md) y footer.
+
+Detalle de rutas y clases: [app/core/README.md](core/README.md).
+
+---
+
+## Estructura
+
+```
+app/
+├── README.md              ← este archivo
+├── core/                  → Router, Database, Controller, Mailer, Validator, I18n
+├── controllers/           → Auth, Editor, Gallery, Home, User
+├── models/                → User, Image, Like, Comment
+├── views/                 → auth, editor, gallery, home, user, partials
+└── lang/                  → es.php, en.php, pt.php, de.php, fr.php
+```
+
+---
+
+## Seguridad en esta capa
+
+- Sin frameworks ni Composer (eval).  
+- Entrada validada (`Validator`) y consultas preparadas.  
+- Sesión + `requireAuth()` / `requireGuest()` en el controlador base.  
+- CSRF en formularios y muchos POST AJAX.  
+- Salida escapada en vistas (`htmlspecialchars`).
+
+Más: [COMPLIANCE.md](../COMPLIANCE.md) · [php.md](../php.md)
+
+---
+
+## Documentación hija
+
+| Ruta | Contenido |
+|------|-----------|
+| [core/](core/README.md) | Piezas reutilizables |
+| [controllers/](controllers/README.md) | Endpoints y responsabilidades |
+| [models/](models/README.md) | Tablas y métodos |
+| [views/](views/README.md) | Plantillas y partials |
+
+Tecnologías: [php.md](../php.md) · [sql.md](../sql.md) · [js.md](../js.md)
+
+---
+
+<p align="center">
+  <b>Hecho con ❤️ por sternero en 42 Málaga — Octubre 2026</b>
+</p>

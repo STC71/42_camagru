@@ -1,97 +1,31 @@
-# 📸 Vista del Editor de Fotos
+# 🎨 `app/views/editor/` — Editor de fotos
 
-## 🎯 ¿Qué es y para qué sirve?
+> **Navegación:** [views/](../README.md) · [EditorController](../../controllers/README.md) · [js.md](../../../js.md) · [public/js](../../../public/js/README.md)
 
-La página donde los usuarios **capturan fotos con su webcam** y les ponen stickers.
+## Contenido
 
-**¿Por qué existe?** Es la funcionalidad central del proyecto: crear fotos personalizadas.
+- `index.php`: pestañas **Webcam** / **Subir archivo**, grid de stickers, miniaturas propias, CSRF, controles de captura/GIF.
+- Script: `/js/editor.js` (getUserMedia, preview, drag sticker, upload, GIF).
+- Estilos embebidos + [public/css/style.css](../../../public/css/README.md).
 
-## 📋 Contenido
+## Reglas de UX alineadas al subject
 
-**`index.php`** - La interfaz completa del editor (webcam + stickers + controles)
+- Editor solo si hay login (si no, redirect).  
+- Capturar / GIF / subir: requieren **sticker** seleccionado (botones deshabilitados si falta).  
+- La superposición definitiva se calcula en el **servidor** (no confiar solo en el canvas del cliente).
 
-## ✨ ¿Qué puede hacer el usuario aquí?
+## Upload
 
-### 1. Captura desde Webcam
-- Activar la cámara (pide permiso al usuario)
-- Ver vista previa en tiempo real
-- Botón para tomar la foto
-- Mensaje de error si deniega permisos
+- Zona compacta drag-and-drop o clic (`#file-input` a pantalla de la zona).  
+- Campo `image` + CSRF; preview local antes de enviar.
 
-### Superposición de Stickers
-- ✅ Selección de stickers predefinidos
-- ✅ Vista previa en vivo (BONUS)
-- ✅ Posicionamiento drag & drop (BONUS)
-- ✅ Control de tamaño con slider (BONUS)
+## Bonus
 
-### Subida de Archivo
-- ✅ Input type="file"
-- ✅ Validación de tipo
-- ✅ Vista previa antes de subir
-- ✅ Drag & drop de archivos
-
-### Generación de GIF (BONUS)
-- ✅ Botón de grabación
-- ✅ Captura de 30 frames
-- ✅ Indicador visual de progreso
-- ✅ Procesamiento en servidor
-
-### Galería Personal
-- ✅ Mis fotos subidas
-- ✅ Botón de eliminar
-- ✅ Confirmación antes de borrar
-
-## 🎨 Tecnologías Frontend
-
-### HTML5 APIs
-```javascript
-// getUserMedia API - Acceso a webcam
-navigator.mediaDevices.getUserMedia({ video: true })
-    .then(stream => {
-        video.srcObject = stream;
-    });
-
-// Canvas API - Procesamiento de imagen
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-```
-
-### JavaScript Vanilla
-```javascript
-// Capturar foto con sticker
-function capturePhoto() {
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // Superponer sticker
-    if (selectedSticker) {
-        ctx.drawImage(selectedSticker, stickerX, stickerY, stickerSize, stickerSize);
-    }
-    
-    // Convertir a blob y enviar
-    canvas.toBlob(blob => {
-        const formData = new FormData();
-        formData.append('photo', blob);
-        fetch('/editor/capture', { method: 'POST', body: formData });
-    });
-}
-```
-
-## 📺 Videos Educativos en Español
-
-### WebCam y Canvas
-- [getUserMedia API - Tutorial](https://www.youtube.com/watch?v=wXtlrMjRx3k) - Por Coding Shiksha
-- [Canvas API en JavaScript](https://www.youtube.com/watch?v=EO6OkltgudE) - Por FalconMasters
-- [Manipulación de Imágenes con Canvas](https://www.youtube.com/watch?v=0eWrpsCLMJQ) - Por MoureDev
-
-### Drag & Drop
-- [HTML5 Drag and Drop API](https://www.youtube.com/watch?v=wv7pvH1O5Ho) - Por MiduDev
-- [Drag & Drop desde Cero](https://www.youtube.com/watch?v=C22hQKE_32c) - Por FaztCode
-
-### File Upload
-- [File API y FileReader](https://www.youtube.com/watch?v=ScZZoHj3gK4) - Por Código Facilito
-- [Upload de Archivos con AJAX](https://www.youtube.com/watch?v=ZJUvMHolT5o) - Por FalconMasters
+- Preview en vivo + drag del sticker.  
+- GIF vía `create-gif` + Imagick en el contenedor ([docker.md](../../../docker.md)).
 
 ---
 
-[⬆ Volver a views/](../README.md) | [⬆ README principal](../../../README.md)
+<p align="center">
+  <b>Hecho con ❤️ por sternero en 42 Málaga — Octubre 2026</b>
+</p>

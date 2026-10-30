@@ -1,3 +1,5 @@
+> **Navegación:** [README](README.md) · [database/README.md](database/README.md) · [sql.md](sql.md) · [config/README.md](config/README.md)
+
 # 📋 Inicialización de la Base de Datos - Camagru
 
 ## 🎯 ¿Qué sucede cuando faltan las tablas?
@@ -145,3 +147,8 @@ users (tabla base)
 | **Requisito** | BD debe estar corriendo en Docker |
 | **Alternativa** | Ejecutar manualmente: `make db < database/init.sql` |
 
+---
+
+<p align="center">
+  <b>Hecho con ❤️ por sternero en 42 Málaga — Octubre 2026</b>
+</p>
