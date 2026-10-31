@@ -1,4 +1,6 @@
-# 📸 Camagru – Plataforma de Compartición de Fotos
+<p align="center">
+  <img src="./imgs/banner_00.jpg" alt="📸 Camagru – Plataforma de Compartición de Fotos" width="100%">
+</p>
 
 **Proyecto Outer Core implementado en [42 Málaga](https://www.42malaga.com/)** — aplicación web tipo Instagram: captura con webcam, stickers, subida de archivos, galería pública, likes, comentarios, notificaciones por email y GIFs animados.
 
